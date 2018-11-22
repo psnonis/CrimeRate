@@ -1,0 +1,92 @@
+---
+title: "Reducing Crime"
+subtitle: "MIDS W203, Fall 2018, Lab 3"
+author: "Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        number_sections: true
+theme: spacelab
+mainfont: Arial
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("assets/install.R")
+```
+
+# Introduction
+
+![Counties of North Carolina](assets/north_carolina.png)
+
+The primary motivation of this report is to provide key determinants of crime in the state of North Carolina for 
+
+
+# Data Loading and Cleaning
+
+All data are mainly for 1987 except *percent minority* which is for 1980.
+
+# EDA (Model Building Process)
+
+
+The outcome variable of our study is (crmrte) which is coded as "crimes per person".
+
+
+
+- What do you want to measure? Make sure you identify variables that will be relevant to the concerns of the political campaign.
+
+- What covariates help you identify a causal effect?
+
+- What covariates are problematic, either due to multicollinearity, or because they will absorb some of a causal effect you want to measure?
+
+- What transformations should you apply to each variable? This is very important because transformations can reveal linearities in the data, make our results relevant, or help us meet model assumptions.
+
+- Are your choices supported by EDA?
+
+
+
+# Regression Models
+
+## Base Model
+## Second Model
+## Third Model
+## Regression Table
+
+# Ommitted Variables
+
+# Conclusion
+
+- Does the conclusion address the high-level concerns of a political campaign?
+- Is the discussion connected to whether the key effects are real or whether they may be solely an artifact of omitted variable bias?
+
+
+```{r}
+crime <- read.csv('assignment/crime_v2.csv')
+```
+
+response <- crime$crmrte
+explanatory <- c()
+
+# Test
+# Test
+
+```{r mychunk, echo = FALSE, fig.height=3, fig.width=5}
+
+library(knitr)
+# sample data
+dat <- data.frame(
+  text = sapply(1:10, FUN = function(x) { paste0(sample(x = LETTERS, size = 15), collapse = "") }), 
+  x1 = rnorm(10), 
+  x2 = rnorm(10, mean = 3), 
+  x3 = rnorm(10, mean = 5))
+
+# generate plots
+invisible(apply(dat[, 2:4], MARGIN = 1, FUN = boxplot))
+
+out <- cbind(row.names(dat), 
+             as.character(dat$text), 
+             sprintf("![](%s%s-%s.png)", opts_current$get("fig.path"), opts_current$get("label"), 1:nrow(dat)))
+kable(out, col.names = c("ID", "Text", "Boxplot"))
+```
