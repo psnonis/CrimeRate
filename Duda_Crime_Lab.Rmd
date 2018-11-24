@@ -1,0 +1,261 @@
+---
+title: "EDA Crime Lab"
+author: "Eduarda Espindola, Laura Pintos, Payman Roghani and Pri Nonis"
+date: "20/11/2018"
+output: pdf_document
+---
+
+# Crime Lab
+
+_Eduarda, Laura, Payman, Pri_
+
+## EDA
+
+```{r Setting environment and loading data}
+setwd("/Users/eduardaespindola/Documents/Mestrado/W203 - Stats/Lab3/w203-lab3")
+crime_data <- read.csv("crime_v2.csv")
+```
+
+```{r Overview of the structure of the dataset}
+head(crime_data)
+str(crime_data)
+summary(crime_data)
+```
+
+Understanding the meaning of some of the variables, we are able to do some cross checks, and make sure all the data makes sense:
+
+1. County (county): It is the county identifier, and as for the problem statement, we should have only one entry (one row) per county:
+
+```{r Checking for NA}
+crime_data[which(is.na(crime_data$county)),]
+```
+
+We have no data in these 6 rows, so for the purpose of our analysis, we can get it out
+
+```{r Taking of empty rows}
+crime_data<-crime_data[which(!is.na(crime_data$county)),]
+```
+
+Now, we must finally check for duplicate values:
+
+```{r Checking duplicate counties}
+crime_data[duplicated(crime_data),]
+```
+
+We have seen that we have two entries for county 193. The data structure we have should be one row for one county, which is why we are going to discard the extra entry for county 193
+
+```{r Keeping unique values}
+crime_data<-unique(crime_data)
+```
+
+If we check again for duplicates, it shows us none:
+
+```{r Checking for duplicates yet again}
+crime_data[duplicated(crime_data),]
+```
+
+2. Year (year): we have that all the observations come from the year of 1987, therefore, we should just check if there are other years on this dataset
+
+```{r Checking years}
+summary(crime_data$year)
+```
+
+And there we have it, only observations for 1987.
+
+3. Crime Rate (crmrte): It is calculated as ratio of number of reported crimes to the total population of the county. Theoretically, we could have values ranging from zero (no crimes commited in that county in 1987) to infinity (so many crimes committed that the ratio goes to infinity), however both these cases are extremes that don't make any logical sense. So we should check the distribution of this variable to try and spot weird observations:
+
+```{r Checking the Crime Rate}
+hist(x = crime_data$crmrte, main = "Crime Rate Distribution", xlab = "Crime Rate", ylab = "Frequency")
+summary(crime_data$crmrte)
+```
+
+There is nothing abnormal with the data, so it is safe to proceed.
+
+4. Probability of arres (prbarr): The probability of arrest is proxied by the ratio of arrests to offenses.
+
+```{r Checking the Probability of Arrest}
+hist(x = crime_data$prbarr, breaks=20, main = "Probability of Arrest Distribution", xlab = "Probability of Arrest", ylab = "Frequency")
+summary(crime_data$prbarr)
+```
+
+Probabilities should not be over 100%, so we should take a closer look at the observations where the probability of arrest were higher than 1
+
+```{r Checking Probability of Arrest Higher than 1}
+crime_data[crime_data$prbarr>1,]
+```
+
+For county 115, another thing jumps to the eye, the probability of conviction (prbpris, proxied by the ratio of convictions to arrests), is also higher than 1. Probabilities should range from 0 to 1, however, these anomalies might be due to the way those variables were proxied: probability of arrest is proxied by the ratio of arrests to offenses and the probability of conviction, by the ratio of convictions to arrests. They are not actual probabilities. One may argue that it makes no sense to have more arrests than offenses, or more convictions than arrests, however, we are looking at snapshot of 1987, and arrests made in that year might be referring both to offenses mad in 1987 and previously, which could explain the ration being over than one. The same line of thought applies for the probability of conviction variable: the convictions made in 1987 might be referring both to arrests made in 1987 and previously. For those reasons, we choose not to discard this observation.
+
+5. Probability of Conviction (prbconv): As we have seen previously, the probability of conviction is proxied by the ratio of convictions to arrests.
+
+```{r Probability of Conviction}
+summary(crime_data$prbconv)
+```
+
+The probability of conviction has some weird values, such one that is empty and another one that is `. We should take a look at those observations
+
+```{r Weird values for probability of conviction}
+crime_data$prbconv
+crime_data[crime_data$prbconv == '' | crime_data$prbconv=='`',]
+```
+
+The observations with these weird values have already been discarded on previous analysis, however, they still show up as factors, since they were first loaded like that. One way we could go is transforming that variable into a numeric one
+
+```{r Converting probability of conviction to numeric}
+crime_data$prbconv<-as.numeric(as.character(crime_data$prbconv))
+```
+
+Now we can perform the usual analysis:
+
+```{r Checking the Probability of Conviction}
+hist(x = crime_data$prbconv, breaks=20, main = "Probability of Conviction Distribution", xlab = "Probability of Conviction", ylab = "Frequency")
+summary(crime_data$prbconv)
+```
+
+Again, we see observations in which the probability of conviction is higher than 1, which shouldn't happen, if they were in fact probabilities. However, as we previously stated, by the method they were proxied, values above 1 are possible. But, nonetheless, we must analyze those cases in more detail.
+
+```{r Checking cases where the probability of conviction is higher than 1}
+crime_data[crime_data$prbconv>1,]
+```
+
+Those observations fall into the same issue we have seen for the probability of arrest variable. By the way they were proxied, the ratio of convictions to arrests in 1987 doesn't necessarily matches convictions in 1987 referring to arrests only made in 1987. There might be some convictions made in 1987 referring to arrests made in previous years in the mix, which is why we decide to keep those observations, as the same effect migh also be present in the observations where the probability of conviction was below 1.
+
+6. Probability of Prison Sentence (prbpris): The probability of prison sentence is proxied
+by the convictions resulting in a prison sentence to total convictions. In that case, unlike the other two previous variables we analyzed, the ratio is calculated in the same set of convictions: how many of such set of convictions resulted in a prison sentence. Therefore, for this variable, we should have the values ranging from 0 to a maximum of 1.
+
+```{r Checking the Probability of Prison Sentence}
+hist(x = crime_data$prbpris, breaks=20, main = "Probability of Prison Sentence Distribution", xlab = "Probability of Prison Sentence", ylab = "Frequency")
+summary(crime_data$prbpris)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+7. Average Sentence, days (avgsen): The average sentence time in days. This variable doesn't have a theoretical limit, it only shouldn't be negative. So we just need to be wary of outliers and understand if the values are actually true or some sort of measurement mistake.
+
+```{r Checking the Average Sentence}
+hist(x = crime_data$avgsen, breaks=20, main = "Average Sentence Distribution", xlab = "Average Sentence", ylab = "Frequency")
+summary(crime_data$avgsen)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+8. Police per Capita (polpc): The ratio of the number of police officers to the total population of the county. The values must be in the range from 0 (no cops in the county) to 1 (everyone in the county is a cop).
+
+```{r Checking the Police per Capita}
+hist(x = crime_data$polpc, breaks=20, main = "Police per Capita Distribution", xlab = "Police per Capita", ylab = "Frequency")
+summary(crime_data$polpc)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+9. Density (density): People per square mile. This variable should be above zero. Other than that, we should only take a deeper look at outliers.
+
+```{r Checking the Density}
+hist(x = crime_data$density, breaks=20, main = "Density Distribution", xlab = "Density", ylab = "Frequency")
+summary(crime_data$density)
+```
+
+There is a strangely small value for the minimum density, so we should take a deeper look:
+
+```{r Small Density Value}
+crime_data[crime_data$density<0.0001,]
+```
+Searching for the FIPS code of this county (173), we see that it is Swain County. That is clearly an arithmetic error, and the true density value is 0.02. So we must correct it
+
+```{r Correcting Swain County Density}
+
+crime_data$density[crime_data$density<0.0001]<- crime_data$density[crime_data$density<0.0001]*1000
+crime_data[crime_data$county==173,]
+```
+
+
+10.Tax Revenue per Capita (taxpc): This variable should be above zero. Other than that, we should only take a deeper look at outliers.
+
+```{r Checking Tax Revenue per Capita}
+hist(x = crime_data$taxpc, breaks=20, main = "Tax per Capita Distribution", xlab = "Tax per Capita", ylab = "Frequency")
+summary(crime_data$taxpc)
+```
+
+The observation in which tax per capita is almost 120 catches the eye, and so we should take a deeper look at that one.
+
+```{r Tax per capita almost 120}
+crime_data[crime_data$taxpc>100,]
+```
+
+The other variables seem to be ok, so, it is safe to keep these observation.
+
+11. West (west) / 12. Central (central) / 13. Urban (urban): Binary variables that indicate if the county is on West North Carolina, Central North Carolina or in SMSA. All of them should be either 0 or 1 for each observation.
+
+```{r Checking West, Central, Urban}
+hist(x=crime_data$west, main = "West", xlab= "West", ylab= "Frequency")
+hist(x=crime_data$central, main = "Central", xlab= "Central", ylab= "Frequency")
+hist(x=crime_data$urban, main = "Urban", xlab= "Urban", ylab= "Frequency")
+```
+
+The variables behave as we expected, and we can move on to analyzing other variables.
+
+14. Percent Minority, 1980 (pctmin80): Percentage of population within minority groups in the year of 1980. It should be between 0 and 1, because it represents the fraction of the population that is within minority groups
+
+```{r Checking Percent Minority}
+hist(x = crime_data$pctmin80, breaks=20, main = "Percent Minority Distribution", xlab = "Percent Minority", ylab = "Frequency")
+summary(crime_data$pctmin80)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+15. Weekly Wage, Contruction (wcon) / 16. Weekly Wage, Transportation, Utilities and Community (wtuc) / 17. Weekly Wage, Wholesale and Retail Trade (wtrd) / 18. Weekly Wage, Financial, Insurance and Real Estate (wfir) / 19. Weekly Wage, Service Industry (wser) / 20. Weekly Wage, Manufacturing (wmfg) / 21. Weekly Wage, Federal Employees (wfed) / 22. Weekly Wage, State Employees (wsta) / 23. Weekly Wage, Local Government Employees (wloc): All of these variables refer to the average weekly wage in different sectors of the economy. We should check for outliers, and if they do happen, investigate them more deeply.
+
+```{r Checking Wages}
+hist(x = crime_data$wcon, breaks=20, main = "Weekly Contruction Wage Distribution", xlab = "Weekly Contruction Wage", ylab = "Frequency")
+summary(crime_data$wcon)
+
+hist(x = crime_data$wtuc, breaks=20, main = "Weekly Transportation, Utilities and Community Wage Distribution", xlab = "Weekly Transportation, Utilities and Community Wage", ylab = "Frequency")
+summary(crime_data$wtuc)
+
+hist(x = crime_data$wtrd, breaks=20, main = "Weekly Wholesale and Retail Trade Wage Distribution", xlab = "Weekly Wholesale and Retail Trade Wage", ylab = "Frequency")
+summary(crime_data$wtrd)
+
+hist(x = crime_data$wfir, breaks=20, main = "Weekly Financial, Insurance and Real Estate Wage Distribution", xlab = "Weekly Financial, Insurance and Real Estate Wage", ylab = "Frequency")
+summary(crime_data$wfir)
+
+hist(x = crime_data$wser, breaks=20, main = "Weekly Service Industry Wage Distribution", xlab = "Weekly Service Industry Wage", ylab = "Frequency")
+summary(crime_data$wser)
+
+hist(x = crime_data$wmfg, breaks=20, main = "Weekly Manufacturing Wage Distribution", xlab = "Weekly Manufacturing Wage", ylab = "Frequency")
+summary(crime_data$wmfg)
+
+hist(x = crime_data$wfed, breaks=20, main = "Weekly Federal Employees Wage Distribution", xlab = "Weekly Federal Employees Wage", ylab = "Frequency")
+summary(crime_data$wfed)
+
+hist(x = crime_data$wsta, breaks=20, main = "Weekly State Employees Wage Distribution", xlab = "Weekly State Employees Wage", ylab = "Frequency")
+summary(crime_data$wsta)
+
+hist(x = crime_data$wloc, breaks=20, main = "Weekly Local Government Employees Wage Distribution", xlab = "Weekly Local Government Employees Wage", ylab = "Frequency")
+summary(crime_data$wloc)
+```
+
+For the service industry, there is one observation in particular that catches the eye, which is way above the second largest value. For that, we take a deeper look
+
+```{r Service Industry Investigation}
+crime_data[crime_data$wser>2000,]
+```
+
+It is county 185, Warren County. The only sector that has a weekly wage so much higher than for the other counties is the service industry, with all other sectors having a weekly wage very close to the state average. One might wonder if this county is particularly attractive for tourism, or some other sort of services, to explain such a difference. That is not the fact: Warren county is a center of tobacco and cotton plantations,educational later textile mills (https://en.wikipedia.org/wiki/Warren_County,_North_Carolina). It is very likely a dot was misplaced, and the actual value is 217.7068 instead of 2177.068. However, since we cannot atest that with certainty, we will leave the value as it is, and will not discard the observation.
+
+24. Offense mix, face-to-face / other (mix): Represents the ratio of criminal offenses made face-to-face (such as armed robbery) to other types. The values can range within any positive number, however, we should dig deeper in the case of outliers.
+
+```{r Checking Mix}
+hist(x = crime_data$mix, breaks=20, main = "Offense Mix Distribution", xlab = "Offense Mix", ylab = "Frequency")
+summary(crime_data$mix)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+25. Percent Young Male (pctymle): Represents the percent of the population composed by males between the age of 15 and 24. Should be a number between 0 and 1.
+
+```{r Checking Percent Young Male}
+hist(x = crime_data$pctymle, breaks=20, main = "Percent Young Male Distribution", xlab = "Percent Young Male", ylab = "Frequency")
+summary(crime_data$pctymle)
+```
+
+The variable behaves as expected and now we can finally move on to the research question.
