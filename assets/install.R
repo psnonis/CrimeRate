@@ -45,10 +45,4 @@ import('RColorBrewer')
 import('car')
 import('devtools')
 import('datastorm-open/visNetwork', devtools = T, version = '2.0.5')
-
-# import('showtext')
-# font.add.google('Gloria Hallelujah', 'gloria')
-# showtext.auto(enable = T)
-# family <- 'gloria'
-
-family <- 'sans'
+import('stargazer')

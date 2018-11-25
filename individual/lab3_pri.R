@@ -7,6 +7,9 @@ library(tidyverse)
 library(ggthemes)
 library(RColorBrewer)
 library(maps)
+library(stargazer)
+
+cpops           <- read.csv('population_1985.csv')
 
 cfips           <- county.fips[grepl('north carolina', county.fips$polyname),] # fips for NC counties
 cfips           <- rename(cfips, county = fips, subregion = polyname)          # conform column names
@@ -14,6 +17,7 @@ cfips$county    <- cfips$county - 37000                                        #
 cfips$subregion <- gsub('north carolina,(.*?)', '\\1', cfips$subregion)        # remove state name
 cfips$subregion <- gsub(':.*','',cfips$subregion)                              # fix currituck county
 cfips           <- cfips[!duplicated(cfips$subregion),]                        # del currituck duplicates
+rownames(cfips) <- NULL
 
 ncmap <- subset(map_data('county'), region == 'north carolina') # geo locations for NC counties
 ncmap <- left_join(ncmap, cfips, by = 'subregion')              # append county fips codes
@@ -36,6 +40,8 @@ map <- function(column, title)
 }
 
 map('crmrte', 'Crime Rate per Capita')
+
+cfips
 
 library(corrplot)
 
@@ -70,6 +76,12 @@ tab <- kable(crime.summary)
 
 knit(text=tab)
 
+qq<-function(x,y)
+{
+    qqnorm(lm(y,x))
+    qqline(lm(y,x))
+}
+
 mo<-function(x,y,xt,yt)
 {
     x<-xt(x)
@@ -79,4 +91,68 @@ mo<-function(x,y,xt,yt)
     abline(lm(y~x))
 }
 
-mo(crime$density,crime$crmrte,log,)
+mo(crime$density,crime$crmrte,log,log)
+qq(crime$density,crime$crmrte)
+skewness(crime$crmrte)
+
+qqnorm(residuals(lm(log(crmrte)~density, data = crime)))
+stargazer(crime)
+
+
+nrow(crime[crime$prbconv<0 | crime$prbconv>1,])
+
+f1 <- log(crime$crmrte) ~ crime$prbarr + crime$prbconv + crime$prbpris + crime$avgsen + crime$density
+m1 <- lm(f1)
+s1 <- summary(m1)
+
+s1$r.squared
+
+summary(lm(crmrte~taxpc, data = crime))$r.squared
+
+crime.explanatory <- c('density','prbarr','prbconv','prbpris','avgsen','mix','polpc','taxpc','pctmin80','pctymle','wcon','wfed','wfir','wloc','wmfg','wser','wsta','wtrd','wtuc')
+
+m = vector()
+
+for (x in names(crime.numeric)){
+
+    y1 <- paste(       'crime$crmrte'    )
+    y2 <- paste('log(','crime$crmrte',')')
+
+    x1 <- paste(       'crime$', x     )
+    x2 <- paste('log(','crime$', x, ')')
+
+    r1 <- summary(lm(paste(y1, '~', x1)))$r.squared
+    r2 <- summary(lm(paste(y2, '~', x1)))$r.squared
+    r3 <- summary(lm(paste(y2, '~', x2)))$r.squared
+
+    print(sprintf('%8s : %.2f %.2f %.2f', x, r1, r2, r3))
+
+    m[x] = lm(paste(y1, '~', x1))
+}
+
+plot(lm(crime$crmrte+crime$polpc~crime$density))
+
+crime$county
+
+102512*0.00182786
+
+crime$taxpc_1k <- crime.numeric$taxpc * 1000
+
+crime.correlation <- as.data.frame(as.table(cor(crime.numeric)))
+crime.correlation[crime.correlation$Var1=='crmrte',]
+
+plot(crime$density)
+
+library(ggplot2)
+par(mfrow=c(2,1))
+ggplot(crime, aes(x=reorder(county, density), y=polpc)) +
+    geom_bar(stat="identity") +
+    geom_hline(yintercept = median(crime$polpc), color="blue") +
+    #scale_x_discrete(breaks = crime$county[c(T,F)]) +
+    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=6),
+          panel.grid.major = element_blank()) +
+    labs(y="Police per capita", x = "County ordered by population density") + ggtitle("Police per capita by county ordered by population density")
+cat("Correlation between Tax Revenue per capita and Police per capita: ",cor(crime$polpc, crime$taxpc), "\n")
+
+Higher tax revenue => more police
+
