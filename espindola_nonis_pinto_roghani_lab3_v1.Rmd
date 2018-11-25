@@ -18,32 +18,66 @@ options(digit=3)
 source("assets/install.R")
 ```
 
-# Introduction
+```{r library}
+library(stargazer)
+```
+
+# Introduction and Research Question
 
 ![Counties of North Carolina](assets/north_carolina.png)
 
-The primary motivation of this report is to provide key determinants of crime in the state of North Carolina for
-
-Change police per capita.
-Implement tougher arrest protocols.
-Enhance community outreach in high density and minority communities.
-
-
-Increasing government wages will decrease crime rates.
-Decreasing tax rates will decrease crime rates.
+The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign which has hired us, in the upcomming election cycle.
+Our research focuses on the following specific questions:
+- Funding for police
+- Tougher arrest protocols
+- Stricter sentencing guidelines
+- Enhanced community outreach
+    - High density regions
+    - Areas with large young adult populations
+    - Minority communities
+- Increasing government wages will decrease crime rates
+- Decreasing tax rates will decrease crime rates
 
 
 # Data Loading and Cleaning
 
-We have been provided with a panel dataset for the year *1987* except for *Percent Minority* (pctmin), which is from 1980.
+The primary data source for our study is *Cornwell and W. Trumball (1994), “Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366*. We will use a single cross-section of data for *1987* from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
 
-- The *Probability of Conviction* (prbconv) contains *1* observation(s) that are outside the acceptable range for a probability : [0,1]. We may also consider that this variable is mislabled and is indeed not a probability.
-- The *Probability of Arrests* (prbarr) contains *10* observation(s) that are outside the acceptable range for a probability : [0,1].
+The *Cornwell dataset* is provided for the year *1987* except for the *Percent Minority* (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
 
-- The *1000 People per Square Mile* (density) contains an anamolous value of 0.0000203422 for Swain County (FIPS=173). According to the U.S. Census Bureau the 1987 population for this county was 10,932; and the total area is 541 sq. miles. Therefore the correct density was 20.207. Looks like there was an arithmatic error which we can easily resolved : 0.0203422.
+The *Cornwell dataset* contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly.
+
+```{r loading}
+crime         <- read.csv('crime_v2.csv')
+crime         <- na.omit(crime)
+crime         <- crime[!duplicated(crime$county),]
+crime$prbconv <- as.numeric(as.character(crime$prbconv))
+
+dim(crime)
+```
 
 
-wikipedia the present population density of this county is 26 people per sq. mile.
+From the 100 counties of North Carolina our dataset contain a sample of *90* counties; it contains *25* metrics from the following aspects.
+
+ - Crime & Law Enforcement
+    crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
+ - Demographics & Geography
+    density, west, central, urban
+    pctmin80,taxpc, pctymle
+ - Wages
+    w*(9)
+
+```{r summary, results = 'asis'}
+stargazer(crime, type = 'html')
+```
+
+We had to address the following anomalies in the dataset.
+
++ The *Probability of Conviction* (prbconv) contains *1* observation(s) that are outside the acceptable range for a probability : [0,1]. We may also consider that this variable is mislabled and is indeed not a probability.
+
++ The *Probability of Arrests* (prbarr) contains *10* observation(s) that are outside the acceptable range for a probability : [0,1].
+
++ The *1000 People per Square Mile* (density) contains an anamolous value of 0.0000203422 for Swain County (FIPS=173). According to the U.S. Census Bureau the 1987 population for this county was 10,932; and the total area is 541 sq. miles. Therefore the correct density was 20.207. Looks like there was an arithmatic error which we can easily resolved : 0.0203422.
 
 We could assume that the data used to calculate these probabalities were inconsistent and possibly not from the same year and or county which has produced this error. Unfortunately this weakens the verasity of these particular variables.
 
@@ -56,16 +90,6 @@ We could assume that the data used to calculate these probabalities were inconsi
 
 
 The outcome variable of our study is (crmrte) which is coded as "crimes per person".
-
-
-```{r}
-crime <- read.csv('crime_v2.csv')
-crime <- na.omit(crime)
-crime <- crime[!duplicated(crime$county),]
-crime$prbconv <- as.numeric(as.character(crime$prbconv))
-stargazer(crime, type = "html")
-```
-
 
 
 - What do you want to measure? Make sure you identify variables that will be relevant to the concerns of the political campaign.
@@ -103,16 +127,6 @@ Possible explanatory variables that are not available :
 - Does the conclusion address the high-level concerns of a political campaign?
 - Is the discussion connected to whether the key effects are real or whether they may be solely an artifact of omitted variable bias?
 
-
-```{r}
-crime <- read.csv('assignment/crime_v2.csv')
-```
-
-response <- crime$crmrte
-explanatory <- c()
-
-# Test
-# Test
 
 ```{r mychunk, echo = FALSE, fig.height=3, fig.width=5}
 
