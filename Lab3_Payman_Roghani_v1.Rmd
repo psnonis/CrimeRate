@@ -1,0 +1,337 @@
+---
+title: "Lab3"
+author: "Payman Roghani"
+date: "11/24/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(car)
+library(stargazer)
+```
+
+#### Introduction:
+
+
+
+
+#### Data Loading and Cleaning
+
+```{r}
+#import data
+Crime <- read.csv("crime_v2.csv", header = T, as.is = T)
+```
+
+
+```{r}
+#check column names
+names(Crime)
+```
+
+
+```{r}
+str(Crime)
+```
+
+```{r}
+summary(Crime)
+```
+
+```{r}
+#check NAs
+Crime[is.na(Crime$county),]
+```
+
+```{r}
+#remove NAs
+Crime1 <- Crime[!is.na(Crime$county),]
+```
+
+```{r}
+#check for duplicates in counties
+Crime1[duplicated(Crime1$county),]
+```
+
+```{r}
+#double check duplicate
+Crime1[Crime1$county == 193,]
+```
+
+```{r}
+#remove duplicate
+Crime2 <- Crime1[-89,]
+```
+
+```{r}
+#convert factor to numeric valuables
+Crime2$prbconv <- as.numeric(as.character(Crime2$prbconv))
+```
+
+```{r}
+#zero in on the county with very low density
+Crime2[Crime2$density < 0.0001,]
+Crime2[Crime2$density < 0.0001,9]
+dens_79 <- 2.03422e-05
+sqmile <- 1/dens_79
+sqmile
+#this means that the county should be at least 49,159 square miles to have 1 person. 
+#The entire North Carolina is 53,819 sq miles
+#Might want to replace with NA
+```
+
+```{r}
+Data <- Crime2
+```
+
+>>> Checked all variables with histogram to ensure normal distribution. Those without normal distribution were transformed to log. See below. 
+
+```{r}
+hist(Data$crmrte, breaks = 20)
+hist(log(Data$crmrte), breaks = 20)
+```
+
+```{r}
+hist(Data$avgsen, breaks = 20)
+hist(log(Data$avgsen), breaks = 20)
+```
+
+```{r}
+hist(Data$polpc, breaks = 20)
+hist(log(Data$polpc), breaks = 20)
+```
+
+```{r}
+hist(Data$mix, breaks =20)
+hist(log(Data$mix), breaks =20)
+```
+
+```{r}
+#conver to log
+Data$logcrmrte <- log(Data$crmrte)
+Data$logavgsen <- log(Data$avgsen)
+Data$logpolpc <- log(Data$polpc)
+Data$logmix <- log(Data$mix)
+```
+
+
+```{r}
+#check for perfect collinearity between variables, especially key variables for our first 2 models
+correl <- cor(Data[,c(4,5,6,9,10,11:23,25,27,28,29)])
+correl
+```
+
+### testing perfect collinearity
+### variables with correlation >= 0.6
+### no perfect collinearity between key independet variables
+- urban/density  
+- wtrd/density  
+- wfed/density  
+- pctmin80/west  
+- wtrd/wloc  
+- wfir/wfed  
+- wfir/wtrd  
+- wfed/wtrd  
+
+>>> Explain summary statistics
+>>> NA values
+>>> Other anomalous values and duplicates
+>>> Top-coding or bottom-coding
+>>> Perfect collinearity
+
+### Regression Models
+We would like to address our key research question to understand whether strict criminal laws and their enforement result in lower crime rate. 
+
+1. Base Model:
+>>> Our dpendent variable. Why we chose them. 
+- crime rate
+>>> Our explanatory variables
+Certainty of punishment:
+- prob. of arrest: ratio of arrests to offenses (maybe stricter arrest protocols are required)
+- prob. of conviction: ratio of convictions to arrests (stricter conviction laws)
+Ceverity of punishment:
+- prob. of prison: ratio of convictions resulting in a prison sentence to total convictions (prison sentence, being one of the toughest convictions, might deter criminals)
+
+```{r}
+#assessment of key variables
+summary(Data$logcrmrte)
+summary(Data$prbarr)
+summary(Data$prbconv)
+summary(Data$prbpris)
+```
+
+```{r}
+#histograms of key variables after transformation
+hist(Data$logcrmrte, breaks = 40, xlab="Crime Rate (log)")
+hist(Data$prbarr, breaks = 40, xlab="Probability of Arrest")
+hist(Data$prbconv, breaks = 40, xlab="Probability of Conviction")
+hist(Data$prbpris, breaks = 40, xlab="Probability of Prison")
+```
+
+```{r}
+boxplot(Data$crmrte, horizontal = T, outline = T, xlab="Crime Rate (log)") #one extreme outlier
+boxplot(Data$prbarr, horizontal = T, outline = T, xlab="Probability of Arrest") #one extreme outlier
+boxplot(Data$prbconv, horizontal = T, outline = T, xlab="Probability of Conviction") #a few exterme ouliers
+boxplot(Data$prbpris, horizontal = T, outline = T, xlab="Probability of Prison") #no extreme outlier
+```
+
+```{r}
+#scatterplots for an overview of key variables that we decided to include in based model and model 2
+scatterplotMatrix(~ logcrmrte+ prbarr + prbconv + prbpris, data = Data)
+```
+
+>>> Summary statistics
+>>> No top coding or bottom coding observed
+>>> Normal distribution 
+>>> Extreme outlier analysis
+>>> Linear relationship with logcrmrte. prbpris doesn't seem to have a linear relationship
+
+```{r}
+model1 <- lm(logcrmrte ~ prbarr + prbconv + prbpris, data = Data2)
+baselm
+```
+
+```{r}
+summary(model1)$r.squared
+AIC(model1)
+```
+
+>>> include explanation of coefficients. What are we measuring with each coefficient? 
+>>> interpret the result of the regression
+>>> 6 CLM assumptions (linearity, iid sample, no perfect collinearity, zero conditional mean, homoskedasticity, normality)
+>>> interpret the results in terms of their research question
+
+```{r influence}
+plot(model1)
+```
+
+
+```{r}
+hist(model1$residuals, breaks = 20)
+```
+
+2. Model 2
+>>> Our dpendent variable. Why we chose them. 
+- crime rate
+>>> Our explanatory variables
+Certainty of punishment:
+- polic per capita: more cops could result in higher probability of arrest
+Ceverity of punishment:
+- avg. prison sentence: the longer, the stronger deterrent
+
+```{r}
+#assessment of key variables
+summary(Data$logpolpc)
+summary(Data$logavgsen)
+```
+
+```{r}
+#histograms of key variables after transformation
+hist(Data$logpolpc, breaks = 40, xlab="Police per Capita (log)")
+hist(Data$logavgsen, breaks = 40, xlab="Avg. Prison Sentence (log)")
+```
+
+```{r}
+boxplot(Data$logavgsen, horizontal = T, outline = T, xlab="Police per Capita (log)") #no extreme outlier
+boxplot(Data$logpolpc, horizontal = T, outline = T, xlab="Avg. Prison Sentence (log)") #one extreme outlier
+```
+
+```{r}
+#scatterplots for an overview of key variables that we decided to include in based model and model 2
+scatterplotMatrix(~ logcrmrte + logavgsen + logpolpc, data = Data)
+```
+
+```{r}
+model2 <- lm(logcrmrte ~ prbarr + prbconv + prbpris + logpolpc + logavgsen, data = Data)
+model2
+```
+
+
+```{r}
+summary(model2)$r.squared
+AIC(model2)
+```
+
+```{r influence}
+plot(model2)
+```
+
+```{r}
+hist(model2$residuals, breaks = 20)
+```
+
+3. Model 3
+
+```{r}
+model3 <- lm(logcrmrte ~ prbarr + prbconv + prbpris + logpolpc + logavgsen + taxpc + density + 
+   west + central + urban + pctmin80 + + wcon + wtuc + wtrd + 
+   wfir + wser + wmfg + wfed + wsta + wloc + logmix + pctymle, data = Data)
+model3
+```
+
+
+```{r}
+summary(model3)$r.squared
+AIC(model3)
+```
+
+```{r influence}
+plot(model3)
+```
+
+```{r}
+hist(model3$residuals, breaks = 20)
+```
+
+### Regression Table
+
+```{r, mylatextable, results = "asis"}
+stargazer(model2,  type = "latex", 
+          report = "vc", # Don't report errors
+          title = "Linear Models Crime Rate",
+          keep.stat = c("rsq", "n"),
+          omit.table.layout = "n") # Omit more output related to errors
+```
+
+### Ommitted Variables Discussion
+>>> Ommited variables
+- Unemployment
+- Education
+- Poverty line/income inequality
+- Houshold size
+- Marital status
+- Drug abuse
+- Ratio of reported to unreported crimes
+- Percentage of people with criminal records
+- Percentage of people with criminal records who are employed
+- Out-of-county criminials (where do the criminal live?)
+>>> Direction of bias
+>>> whether you we any variables available that may proxy (even imperfectly) for the omitted variable
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
