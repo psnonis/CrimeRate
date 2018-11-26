@@ -1,7 +1,7 @@
 ---
-title: "Reducing Crime"
-subtitle: "MIDS W203, Fall 2018, Lab 3"
-author: "Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani"
+title: 'Reducing Crime'
+subtitle: 'MIDS W203, Fall 2018, Lab 3'
+author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
     html_document:
         toc: true
@@ -14,38 +14,39 @@ always_allow_html: yes
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-options(digit=3)
-source("assets/install.R")
-```
 
-```{r library}
-library(stargazer)
+options(digit=3)
+
+source('assets/utility.R')
+
+import('knitr')
+import('kableExtra')
+import('tidyverse')
+import('RColorBrewer')
+import('ggthemes')
+import('stargazer')
+import('lmtest')
+import('maps')
+import('summarytools')
 ```
 
 # Introduction and Research Question
 
-![Counties of North Carolina](assets/north_carolina.png)
+<center>![Counties of North Carolina](assets/north_carolina.png)</center>
 
-The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign which has hired us, in the upcomming election cycle.
-Our research focuses on the following specific questions:
-- Funding for police
-- Tougher arrest protocols
-- Stricter sentencing guidelines
-- Enhanced community outreach
-    - High density regions
-    - Areas with large young adult populations
-    - Minority communities
-- Increasing government wages will decrease crime rates
-- Decreasing tax rates will decrease crime rates
+The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign that has hired our services, in the upcomming election cycle. We strive to provide **actionable policy reccomendations** through **motivated data analysis of the research questions**.
 
+* Our research focuses on the following specific question: **Can crime rates be reduced by a tougher criminal justice system?**
+  + Certainty of Punishment
+  + Severity of Punishment
 
 # Data Loading and Cleaning
 
-The primary data source for our study is *Cornwell and W. Trumball (1994), “Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366*. We will use a single cross-section of data for *1987* from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
+The primary data source for our study is **Cornwell and W. Trumball (1994), “Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366**. We will use a single cross-section of data for **1987** from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
 
-The *Cornwell dataset* is provided for the year *1987* except for the *Percent Minority* (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
+The **Cornwell Dataset** is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
 
-The *Cornwell dataset* contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly.
+The **Cornwell Dataset** contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly.
 
 ```{r loading}
 crime         <- read.csv('crime_v2.csv')
@@ -53,11 +54,13 @@ crime         <- na.omit(crime)
 crime         <- crime[!duplicated(crime$county),]
 crime$prbconv <- as.numeric(as.character(crime$prbconv))
 
+crime.numeric <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
+
 dim(crime)
 ```
 
 
-From the 100 counties of North Carolina our dataset contain a sample of *90* counties; it contains *25* metrics from the following aspects.
+From the 100 counties of North Carolina our dataset contain a sample of **90** counties; it contains **25** metrics from the following aspects.
 
  - Crime & Law Enforcement
     crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
@@ -67,9 +70,22 @@ From the 100 counties of North Carolina our dataset contain a sample of *90* cou
  - Wages
     w*(9)
 
-```{r summary, results = 'asis'}
-stargazer(crime, type = 'html')
+```{r summary, results='hide'}
+#star.1 <- stargazer(crime, align = T, type = 'html', style = 'ajs', notes = 'Univariate Summary')
 ```
+
+```{r}
+dfSummary(crime, style = "grid")
+```
+
+<br/>
+
+```{r crime, fig.align = 'center'}
+source('assets/maps.R')
+map('crmrte', 'Crime Rate per Capita')
+```
+
+<br/>
 
 We had to address the following anomalies in the dataset.
 
@@ -89,7 +105,7 @@ We could assume that the data used to calculate these probabalities were inconsi
 # EDA (Model Building Process)
 
 
-The outcome variable of our study is (crmrte) which is coded as "crimes per person".
+The outcome variable of our study is (crmrte) which is coded as 'crimes per person'.
 
 
 - What do you want to measure? Make sure you identify variables that will be relevant to the concerns of the political campaign.
@@ -133,7 +149,7 @@ Possible explanatory variables that are not available :
 library(knitr)
 # sample data
 dat <- data.frame(
-  text = sapply(1:10, FUN = function(x) { paste0(sample(x = LETTERS, size = 15), collapse = "") }), 
+  text = sapply(1:10, FUN = function(x) { paste0(sample(x = LETTERS, size = 15), collapse = '') }), 
   x1 = rnorm(10), 
   x2 = rnorm(10, mean = 3), 
   x3 = rnorm(10, mean = 5))
@@ -143,27 +159,27 @@ invisible(apply(dat[, 2:4], MARGIN = 1, FUN = boxplot))
 
 out <- cbind(row.names(dat), 
              as.character(dat$text), 
-             sprintf("![](%s%s-%s.png)", opts_current$get("fig.path"), opts_current$get("label"), 1:nrow(dat)))
-kable(out, col.names = c("ID", "Text", "Boxplot"))
+             sprintf('![](%s%s-%s.png)', opts_current$get('fig.path'), opts_current$get('label'), 1:nrow(dat)))
+kable(out, col.names = c('ID', 'Text', 'Boxplot'))
 ```
 
             X   Y~X  LY~X LY~LX
-[1] "  prbarr : 0.16 0.22 0.19"
-[1] " prbconv : 0.15 0.20 0.14"
-[1] " prbpris : 0.00 0.00 0.00"
-[1] "  avgsen : 0.00 0.00 0.00"
-[1] "   polpc : 0.03 0.00 0.08"
-[1] " density : 0.53 0.40 0.24"
-[1] "   taxpc : 0.20 0.13 0.12"
-[1] "pctmin80 : 0.03 0.05 0.16"
-[1] "    wcon : 0.15 0.16 0.16"
-[1] "    wtuc : 0.06 0.04 0.04"
-[1] "    wtrd : 0.18 0.16 0.15"
-[1] "    wfir : 0.11 0.09 0.08"
-[1] "    wser : 0.00 0.01 0.00"
-[1] "    wmfg : 0.12 0.09 0.13"
-[1] "    wfed : 0.24 0.27 0.25"
-[1] "    wsta : 0.04 0.03 0.02"
-[1] "    wloc : 0.13 0.08 0.09"
-[1] "     mix : 0.02 0.02 0.00"
-[1] " pctymle : 0.08 0.08 0.10"
+[1] '  prbarr : 0.16 0.22 0.19'
+[1] ' prbconv : 0.15 0.20 0.14'
+[1] ' prbpris : 0.00 0.00 0.00'
+[1] '  avgsen : 0.00 0.00 0.00'
+[1] '   polpc : 0.03 0.00 0.08'
+[1] ' density : 0.53 0.40 0.24'
+[1] '   taxpc : 0.20 0.13 0.12'
+[1] 'pctmin80 : 0.03 0.05 0.16'
+[1] '    wcon : 0.15 0.16 0.16'
+[1] '    wtuc : 0.06 0.04 0.04'
+[1] '    wtrd : 0.18 0.16 0.15'
+[1] '    wfir : 0.11 0.09 0.08'
+[1] '    wser : 0.00 0.01 0.00'
+[1] '    wmfg : 0.12 0.09 0.13'
+[1] '    wfed : 0.24 0.27 0.25'
+[1] '    wsta : 0.04 0.03 0.02'
+[1] '    wloc : 0.13 0.08 0.09'
+[1] '     mix : 0.02 0.02 0.00'
+[1] ' pctymle : 0.08 0.08 0.10'

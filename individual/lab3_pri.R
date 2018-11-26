@@ -1,7 +1,7 @@
-crime <- read.csv('crime_v2.csv')
-crime <- na.omit(crime)
-crime <- crime[!duplicated(crime$county),]
-crime$prbconv <- as.numeric(as.character(crime$prbconv))
+
++
+
+crime$population85  <- cpops$population85
 
 library(tidyverse)
 library(ggthemes)
@@ -143,16 +143,8 @@ crime.correlation[crime.correlation$Var1=='crmrte',]
 
 plot(crime$density)
 
-library(ggplot2)
-par(mfrow=c(2,1))
-ggplot(crime, aes(x=reorder(county, density), y=polpc)) +
-    geom_bar(stat="identity") +
-    geom_hline(yintercept = median(crime$polpc), color="blue") +
-    #scale_x_discrete(breaks = crime$county[c(T,F)]) +
-    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5, size=6),
-          panel.grid.major = element_blank()) +
-    labs(y="Police per capita", x = "County ordered by population density") + ggtitle("Police per capita by county ordered by population density")
-cat("Correlation between Tax Revenue per capita and Police per capita: ",cor(crime$polpc, crime$taxpc), "\n")
+crime$taxpc_1k <- crime$taxpc*10000
+summary(lm(log(crime$crmrte)~crime$prbarr+crime$prbconv+crime$prbpris))$r.squared
+coef(lm(log(crime$crmrte)~crime$prbarr+crime$prbconv+crime$prbpris+crime$avgsen+crime$density+crime$taxpc+crime$pctmin80+crime$pctymle))
 
-Higher tax revenue => more police
-
+heteroskadicity robust
