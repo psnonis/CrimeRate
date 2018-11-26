@@ -3,14 +3,16 @@ title: 'Reducing Crime'
 subtitle: 'MIDS W203, Fall 2018, Lab 3'
 author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
-    html_document:
+    prettydoc::html_pretty:
+        theme: architect
+        highlight: github
         toc: true
-        toc_float: true
         number_sections: true
-theme: spacelab
-mainfont: Arial
-always_allow_html: yes
 ---
+<style>
+body {
+text-align: justify}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -19,6 +21,7 @@ options(digit=3)
 
 source('assets/utility.R')
 
+import('prettydoc')
 import('knitr')
 import('kableExtra')
 import('tidyverse')
@@ -34,11 +37,32 @@ import('summarytools')
 
 <center>![Counties of North Carolina](assets/north_carolina.png)</center>
 
-The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign that has hired our services, in the upcomming election cycle. We strive to provide **actionable policy reccomendations** through **motivated data analysis of the research questions**.
+The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign that has hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
 
-* Our research focuses on the following specific question: **Can crime rates be reduced by a tougher criminal justice system?**
-  + Certainty of Punishment
-  + Severity of Punishment
+Our research focuses on the following specific question: <b>Can crime rates be reduced by a tougher criminal justice system?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system affects crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using Probability of Arrests, Probability of Conviction, and Probability of Prison.
+
+$$
+\begin{aligned}
+\textbf{Crime Rate} & \sim \textbf{Probability of Arrest} \\
+           & + \textbf{Probability of Conviction} \\
+           & + \textbf{Probability of Prison}
+\end{aligned}
+$$
+
+We will primarily use these three explanatory variables as proxies to measure the effects of the the criminal justice system on crime; and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and will further explore their impact in our extended second OLS model.
+
+## Policy Hypothesis
+
+The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the three explanatory variables Probability of Arrest, Probability of Conviction, and Probability of Prison. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
+
++ <b>Increasing arrest rates will decrease crime rate</b>
+<br/>Actionable through more technological and manpower resources allocated to law enforcement
++ <b>Increasing conviction rates will decrease crime rate</b>
+<br/>Actionable through stricter sentencing guidelines and more resources allocated to law enforcement agencies to collect higher quality evidence
++ <b>Increasing prison verdicts will decrease crime rate</b>
+<br/>Actionable through stricter sentencing guidelines for courts
+
+Our recommendations will be based on sound statistically significant and practically significant results. We hope to reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables. (causal vs associative ..?)
 
 # Data Loading and Cleaning
 
@@ -69,6 +93,22 @@ From the 100 counties of North Carolina our dataset contain a sample of **90** c
     pctmin80,taxpc, pctymle
  - Wages
     w*(9)
+
+```{r}
+smoothScatter(crime$prbarr,crime$crmrte)
+crime$crmrte.log <- log(crime$crmrte)
+
+pHist <- function(x)
+{
+    ggplot() + geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
+        geom_vline(xintercept=mean(x),linetype="dashed",size=1,colour="blue") +
+        stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1, args = list(mean = mean(x), sd = sd(x))) +
+        theme_economist()
+}
+
+pHist(crime$crmrte)
+pHist(crime$crmrte.log)
+```
 
 ```{r summary, results='hide'}
 #star.1 <- stargazer(crime, align = T, type = 'html', style = 'ajs', notes = 'Univariate Summary')

@@ -130,13 +130,18 @@ for (x in names(crime.numeric)){
     m[x] = lm(paste(y1, '~', x1))
 }
 
-plot(lm(crime$crmrte+crime$polpc~crime$density))
+data(father.son)
+heights <- sample(father.son$fheight)
 
-crime$county
+pHist <- function(x)
+{
+    ggplot() + geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
+        geom_vline(xintercept=mean(x),linetype="dashed",size=1,colour="blue") +
+        stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1, args = list(mean = mean(x), sd = sd(x)))
+}
 
-102512*0.00182786
 
-crime$taxpc_1k <- crime.numeric$taxpc * 1000
+psHist(log(crime$crmrte))
 
 crime.correlation <- as.data.frame(as.table(cor(crime.numeric)))
 crime.correlation[crime.correlation$Var1=='crmrte',]
@@ -147,4 +152,6 @@ crime$taxpc_1k <- crime$taxpc*10000
 summary(lm(log(crime$crmrte)~crime$prbarr+crime$prbconv+crime$prbpris))$r.squared
 coef(lm(log(crime$crmrte)~crime$prbarr+crime$prbconv+crime$prbpris+crime$avgsen+crime$density+crime$taxpc+crime$pctmin80+crime$pctymle))
 
-heteroskadicity robust
+coef(lm(log(crime$crmrte)~crime$density))
+plot(crime$density,log(crime$crmrte));abline(lm(log(crime$crmrte)~crime$density))
+
