@@ -31,16 +31,3 @@ import <- function(package, devtools = F, version = NA)
 
     library(package, character.only = T)
 }
-
-import('tidyverse')
-import('ggthemes')
-import('repr')
-import('corrplot')
-import('psych')
-import('visNetwork')
-import('reshape2')
-import('mapproj')
-import('ggpubr')
-import('RColorBrewer')
-import('car')
-import('stargazer')
