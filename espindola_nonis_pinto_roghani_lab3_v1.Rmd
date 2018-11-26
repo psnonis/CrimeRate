@@ -31,6 +31,11 @@ import('stargazer')
 import('lmtest')
 import('maps')
 import('summarytools')
+import('formattable')
+import('sparkline')
+import('cowplot')
+import('corrplot')
+
 ```
 
 # Introduction and Research Question
@@ -73,12 +78,12 @@ The **Cornwell Dataset** is provided for the year **1987** except for the **Perc
 The **Cornwell Dataset** contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly.
 
 ```{r loading}
-crime         <- read.csv('crime_v2.csv')
-crime         <- na.omit(crime)
-crime         <- crime[!duplicated(crime$county),]
-crime$prbconv <- as.numeric(as.character(crime$prbconv))
-
-crime.numeric <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
+crime           <- read.csv('crime_v2.csv')
+crime           <- na.omit(crime)
+crime           <- crime[!duplicated(crime$county),]
+crime$prbconv   <- as.numeric(as.character(crime$prbconv))
+rownames(crime) <- NULL
+crime.numeric   <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
 
 dim(crime)
 ```
@@ -87,45 +92,113 @@ dim(crime)
 From the 100 counties of North Carolina our dataset contain a sample of **90** counties; it contains **25** metrics from the following aspects.
 
  - Crime & Law Enforcement
-    crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
+    + crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
  - Demographics & Geography
     density, west, central, urban
     pctmin80,taxpc, pctymle
  - Wages
     w*(9)
 
-```{r}
-smoothScatter(crime$prbarr,crime$crmrte)
-crime$crmrte.log <- log(crime$crmrte)
+## Summary of the Variables
 
-pHist <- function(x)
-{
-    ggplot() + geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
-        geom_vline(xintercept=mean(x),linetype="dashed",size=1,colour="blue") +
-        stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1, args = list(mean = mean(x), sd = sd(x))) +
-        theme_economist()
-}
+```{r summary, echo = FALSE, warning = FALSE, results="asis"}
 
-pHist(crime$crmrte)
-pHist(crime$crmrte.log)
+crime.summary <- tbl_df(t(sapply(1:25, function(n)
+                 {
+                    x <- crime[,n]
+                    c(Variable = colnames(crime)[n],
+                      Mean     = round(  mean(x), 1),
+                      Median   = round(median(x), 1),
+                      SD       = round(    sd(x), 1),
+                      Min      = round(   min(x), 1),
+                      Max      = round(   max(x), 1),
+                      CrimeCOR = round(cor(crime$crmrte,x), 2),
+                      Spread   = list(x),
+                      Nominal  = list(hist(    x , plot = F)$counts),
+                      Log      = list(hist(log(x), plot = F)$counts)
+                    )
+                 })))
+
+
+formattable(crime.summary, list(
+            CrimeCOR = color_bar("pink"),
+            Spread  = function(z)
+            {
+                sapply(z, function(zz)
+                {
+                    knitr::knit(text = sprintf("`r sparkline(c(%s), type='box')`",
+                                               paste0(zz, collapse = ",")), quiet = TRUE)
+                })
+            },
+            Nominal  = function(z)
+            {
+                sapply(z, function(zz)
+                {
+                    knitr::knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
+                                               paste0(zz, collapse = ",")), quiet = TRUE)
+                })
+            },
+            Log  = function(z)
+            {
+                sapply(z, function(zz)
+                {
+                    knitr::knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
+                                               paste0(zz, collapse = ",")), quiet = TRUE)
+                })
+            }))
+
+
 ```
 
-```{r summary, results='hide'}
-#star.1 <- stargazer(crime, align = T, type = 'html', style = 'ajs', notes = 'Univariate Summary')
+## Correlation of the Variables
+
+```{r correlation}
+
+crime.correlation <- round(cor(crime.numeric, use = 'pairwise.complete.obs'), 2 )
+
+corrplot(crime.correlation, method = 'circle', type = 'lower',  order = 'FPC', diag = F)
 ```
+<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
 
-```{r}
-dfSummary(crime, style = "grid")
-```
+Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
 
-<br/>
+## Analysis of the Outcome Variable
 
-```{r crime, fig.align = 'center'}
+```{r crime, fig.align = 'center', warning = FALSE}
 source('assets/maps.R')
 map('crmrte', 'Crime Rate per Capita')
 ```
 
-<br/>
+<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
+
+Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
+
+```{r transform}
+crime$crmrte.log_10k <- log(crime$crmrte) * 10000
+```
+
+```{r outcome, warning = FALSE}
+pHist <- function(x)
+{
+    ggplot() + 
+        geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
+        geom_vline(xintercept=mean(x), linetype="dashed", size=1, colour="blue") +
+        stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1,
+                      args=list(mean=mean(x), sd=sd(x))) +
+        theme_economist()
+}
+
+p1 <- pHist(crime$crmrte)
+p2 <- pHist(crime$crmrte.log_10k)
+
+plot_grid(p1, p2)
+```
+
+<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
+
+Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
+
+## Correction of Anamolies
 
 We had to address the following anomalies in the dataset.
 
@@ -183,43 +256,3 @@ Possible explanatory variables that are not available :
 - Does the conclusion address the high-level concerns of a political campaign?
 - Is the discussion connected to whether the key effects are real or whether they may be solely an artifact of omitted variable bias?
 
-
-```{r mychunk, echo = FALSE, fig.height=3, fig.width=5}
-
-library(knitr)
-# sample data
-dat <- data.frame(
-  text = sapply(1:10, FUN = function(x) { paste0(sample(x = LETTERS, size = 15), collapse = '') }), 
-  x1 = rnorm(10), 
-  x2 = rnorm(10, mean = 3), 
-  x3 = rnorm(10, mean = 5))
-
-# generate plots
-invisible(apply(dat[, 2:4], MARGIN = 1, FUN = boxplot))
-
-out <- cbind(row.names(dat), 
-             as.character(dat$text), 
-             sprintf('![](%s%s-%s.png)', opts_current$get('fig.path'), opts_current$get('label'), 1:nrow(dat)))
-kable(out, col.names = c('ID', 'Text', 'Boxplot'))
-```
-
-            X   Y~X  LY~X LY~LX
-[1] '  prbarr : 0.16 0.22 0.19'
-[1] ' prbconv : 0.15 0.20 0.14'
-[1] ' prbpris : 0.00 0.00 0.00'
-[1] '  avgsen : 0.00 0.00 0.00'
-[1] '   polpc : 0.03 0.00 0.08'
-[1] ' density : 0.53 0.40 0.24'
-[1] '   taxpc : 0.20 0.13 0.12'
-[1] 'pctmin80 : 0.03 0.05 0.16'
-[1] '    wcon : 0.15 0.16 0.16'
-[1] '    wtuc : 0.06 0.04 0.04'
-[1] '    wtrd : 0.18 0.16 0.15'
-[1] '    wfir : 0.11 0.09 0.08'
-[1] '    wser : 0.00 0.01 0.00'
-[1] '    wmfg : 0.12 0.09 0.13'
-[1] '    wfed : 0.24 0.27 0.25'
-[1] '    wsta : 0.04 0.03 0.02'
-[1] '    wloc : 0.13 0.08 0.09'
-[1] '     mix : 0.02 0.02 0.00'
-[1] ' pctymle : 0.08 0.08 0.10'
