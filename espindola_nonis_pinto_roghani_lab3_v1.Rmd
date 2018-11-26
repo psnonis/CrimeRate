@@ -17,8 +17,6 @@ text-align: justify}
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-options(digit=3)
-
 source('assets/utility.R')
 
 import('prettydoc')
@@ -36,6 +34,7 @@ import('sparkline')
 import('cowplot')
 import('corrplot')
 
+options(digit=3)
 ```
 
 # Introduction and Research Question
@@ -161,16 +160,17 @@ Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro
 
 ## Correlation of the Variables
 
-```{r correlation}
+```{r correlation, fig.align = 'center'}
 
 crime.correlation <- round(cor(crime.numeric, use = 'pairwise.complete.obs'), 2 )
+#crime.ptest       <- cor.test(crime.numeric)$p
 
-corrplot(crime.correlation, method = 'circle', type = 'lower',  order = 'FPC', diag = F)
+corrplot(crime.correlation, diag = FALSE, order = 'FPC', type = "upper")
 ```
 
-<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
+* The Population Density is strongly correlated with Crime Rate.
+* The Urban Counties are strongly correlated with Crime Rate.
 
-Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
 
 ## Analysis of the Outcome Variable
 
@@ -187,7 +187,7 @@ Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro
 crime$crmrte.log_10k <- log(crime$crmrte) * 10000
 ```
 
-```{r outcome, warning = FALSE}
+```{r outcome, fig.align = 'center', warning = FALSE}
 pHist <- function(x)
 {
     ggplot() + 
@@ -212,20 +212,15 @@ Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro
 
 We had to address the following anomalies in the dataset.
 
-+ The *Probability of Conviction* (prbconv) contains *1* observation(s) that are outside the acceptable range for a probability : [0,1]. We may also consider that this variable is mislabled and is indeed not a probability.
+* The *Probability of Conviction* (prbconv) contains *1* observation(s) that are outside the acceptable range for a probability : [0,1]. We may also consider that this variable is mislabled and is indeed not a probability.
 
-+ The *Probability of Arrests* (prbarr) contains *10* observation(s) that are outside the acceptable range for a probability : [0,1].
+* The *Probability of Arrests* (prbarr) contains *10* observation(s) that are outside the acceptable range for a probability : [0,1].
 
-+ The *1000 People per Square Mile* (density) contains an anamolous value of 0.0000203422 for Swain County (FIPS=173). According to the U.S. Census Bureau the 1987 population for this county was 10,932; and the total area is 541 sq. miles. Therefore the correct density was 20.207. Looks like there was an arithmatic error which we can easily resolved : 0.0203422.
+* The *1000 People per Square Mile* (density) contains an anamolous value of 0.0000203422 for Swain County (FIPS=173). According to the U.S. Census Bureau the 1987 population for this county was 10,932; and the total area is 541 sq. miles. Therefore the correct density was 20.207. Looks like there was an arithmatic error which we can easily resolved : 0.0203422.
 
 We could assume that the data used to calculate these probabalities were inconsistent and possibly not from the same year and or county which has produced this error. Unfortunately this weakens the verasity of these particular variables.
 
-## Transformations
-
-- Experiment with X transformations. Use higher R.Squared and lower MSE as a guide.
-- Y tranformations must be applied universally.
-
-# EDA (Model Building Process)
+# Model Building Process
 
 
 The outcome variable of our study is (crmrte) which is coded as 'crimes per person'.
@@ -244,11 +239,52 @@ The outcome variable of our study is (crmrte) which is coded as 'crimes per pers
 
 Higher Crime Rate Seems to Indicate Higher Police. I.E. the police presence was enhanced in crime ridden counties.
 
-
 # Regression Models
 
 ## Base Model
+
+Based on the variables selected, our base population model is:
+
+$$
+\begin{aligned}
+\textbf{log(Crime Rate)} & \sim \textbf{Probability of Arrest} \\
+           & + \textbf{Probability of Conviction} \\
+           & + \textbf{Probability of Prison} \\
+           & + \textbf{u}
+\end{aligned}
+$$
+
+```{r base}
+model.1 <- with(crime, lm(log(crmrte)~prbarr+prbconv+prbpris))
+coefs.1 <- coef(model.1)
+```
+
+<b>Model Coefficients</b>
+
+* $\beta_0$ : The **`r names(coefs.1[1])`** is `r round(coefs.1[1],3)`, which can not be interpreted in a meaningful way without considering the other coefficients.
+* $\beta_1$ : The **`r names(coefs.1[2])`** coefficient is `r round(coefs.1[2],3)`, which means we could preddict that for every 1% increase in Probability of Arrest that Crime Rate will go down by approximately 1.99%, while holding all other covariates and unobserved factors fixed.
+* $\beta_2$ : The **`r names(coefs.1[3])`** coefficient is `r round(coefs.1[3],3)`, which means we could preddict that for every 1% increase in Probability of Conviction that Crime Rate will go down by approximately 0.74%, while holding all other covariates and unobserved factors fixed.
+* $\beta_3$ : The **`r names(coefs.1[4])`** coefficient is `r round(coefs.1[4],3)`, which means we could preddict that for every 1% increase in Probability of Prision that Crime Rate will go **up** by approximately 0.34%, while holding all other covariates and unobserved factors fixed.
+
+<b>Goddness of Fit</b>
+
+<b>6 CLM Assumptions</b>
+
 ## Second Model
+
+$$
+\begin{aligned}
+\textbf{log(Crime Rate)} & \sim \textbf{Probability of Arrest} \\
+           & + \textbf{Probability of Conviction} \\
+           & + \textbf{Probability of Prison} \\
+           & + \textbf{u}
+\end{aligned}
+$$
+
+```{r second}
+model.2 <- with(crime, lm(log(crmrte)~prbarr+prbconv+prbpris))
+```
+
 ## Third Model
 ## Regression Table
 
