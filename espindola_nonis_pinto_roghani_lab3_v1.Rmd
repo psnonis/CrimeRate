@@ -91,13 +91,16 @@ dim(crime)
 
 From the 100 counties of North Carolina our dataset contain a sample of **90** counties; it contains **25** metrics from the following aspects.
 
- - Crime & Law Enforcement
-    + crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
- - Demographics & Geography
-    density, west, central, urban
-    pctmin80,taxpc, pctymle
- - Wages
-    w*(9)
++ Identification
+  - county, year
++ Crime & Law Enforcement
+  - crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
++ Demographics & Geography
+  - density, west, central, urban
+  - pctmin80, taxpc, pctymle
++ Hourly Wages
+  - wcon, wfir, wmfg, wser, wtrd, wtuc
+  - wfed, wsta, wloc [government]
 
 ## Summary of the Variables
 
@@ -150,6 +153,12 @@ formattable(crime.summary, list(
 
 ```
 
+<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
+
+Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
+
+<b>DISCUSS IMPORTANT VARIABLE IN MORE DETAIL</b>
+
 ## Correlation of the Variables
 
 ```{r correlation}
@@ -158,6 +167,7 @@ crime.correlation <- round(cor(crime.numeric, use = 'pairwise.complete.obs'), 2 
 
 corrplot(crime.correlation, method = 'circle', type = 'lower',  order = 'FPC', diag = F)
 ```
+
 <br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
 
 Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
