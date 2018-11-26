@@ -1,0 +1,366 @@
+---
+title: "Lab3"
+author: "Eduarda Espindola"
+date: "11/25/2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(car)
+library(stargazer)
+library(sandwich)
+library(lmtest)
+library(summarytools)
+```
+
+
+## Introduction:
+
+
+
+
+## Data Loading and Cleaning
+
+
+First of all, we must load our data into R:
+```{r Loading Data}
+crime <- read.csv("../crime_v2.csv", header = T, as.is = T)
+```
+
+Now, we have the description for our variables, and how they were calculated / proxied, which will allow us to understand the expected data type and the theoretical range of values.
+
+- space for table with descriptions - 
+
+Now, we can take a look at how our data is structured:
+```{r Checking the Data Structure}
+head(crime)
+```
+
+
+Now that we have our data loaded, we are going to do some basic sanity checks in out data. We will start by checking for rows with NA values:
+```{r Checking for NAs}
+crime[is.na(crime$county),]
+```
+
+We observe that we have 6 observations with NA's in all of the variables, and therefore, add no information to our analysis. For that reason, we will discard those observations
+
+```{r Removing NAs}
+crime<-crime[!is.na(crime$county),]
+```
+
+Now that we have removed the NAs, we should check for duplicate observations:
+
+```{r Checking for Duplicates}
+crime[duplicated(crime),]
+```
+
+We see that county 193 appears twice in our dataset. For that reason, we are discarding one, and therefore, keeping only one observation of county 193 in our dataset.
+
+```{r Removing the Duplicates}
+crime<-crime[!duplicated(crime),]
+```
+
+Now we go to a deeper analysis. By the description of the variables and how they are calculated, we expect them to be in certain format. Let's check how R loaded the variables.
+
+```{r Checking the types}
+str(crime)
+```
+
+By the description of the variables, the first thing we notice is that the Probability of Conviction Variable comes as a factor, when it should be a num. We can adjust that:
+
+```{r Converting}
+crime$prbconv <- as.numeric(as.character(crime$prbconv))
+```
+
+For now, the basic cleaning has been done, however, we should move up to assessing any other oddities with the data, regarding the values it should theoretically assume and also analyzing outliers.
+
+```{r Analyzing outliers}
+library(summarytools)
+summary(crime[,3:25])
+print(dfSummary(crime[,3:25]), method = 'render')
+```
+
+Observing the summary for each variable and the summary table for each variable, we notice some rather odd observations. 
+
+_Probabilities above 1_
+
+Theoretically speaking, we should not have probabilities over 1 (100%), but that is what we observe in vairables Probability of Arrest (prbarr) and Probability of Conviction (prbconv). However, when we understand how those variables were proxied, we understand that they are not actual probabilities: they are simply ratios. 
+
+The probability of arrest is proxied by the ratio between the number of arrests in 1987 to the number of offenses in 1987. However, not every arrest made in 1987 might be referring to offenses made in 1987: there might be arrests referring to crimes commited in previous years, which explains why the ratio between arrests and offenses in 1987 could be above 1.
+
+The probability of conviction is proxied by the ratio between the number of convictions and to the number of arrests in 1987. It is the same thing we have observed for the probability of arrest. The convictions issued in 1987 are not all necessarily referring to arrests made in 1987. Besides that, one arrest might lead to several convictions (example, a person arrested might be convicted for several crimes). In that sense, it is possible for us to have this variable achieving values above 1.
+
+_Outliers in other orders of magnitude_
+
+Another thing we observed, both by the histogram and by the summary statistics, is that for the density variable, we have a value that is in a much lower order of magnitude than other observations, with a density of 0.00002. For that, we decide to dig deeper.
+
+```{r Checking the Density}
+hist(x = crime$density, breaks=50, main = "Density Distribution", xlab = "Density", ylab = "Frequency")
+summary(crime$density)
+```
+
+```{r Small Density Value}
+crime[crime$density<0.0001,]
+```
+Searching for the FIPS code of this county (173), we see that it is Swain County. When we search the data for Swain County in 1987 in the United States Census Bureau database, we see that the density was in fact 0.0202. That is clearly an arithmetic error, generating a value a 1000 times smaller. So, we correct it.
+
+```{r Correcting Swain County Density}
+
+crime$density[crime$density<0.0001]<- crime$density[crime$density<0.0001]*1000
+crime[crime$county==173,]
+```
+
+
+_Other clear outliers_
+
+For the service industry wages, there is one observation in particular that catches the eye, which is way above the second largest value. For that, we take a deeper look
+
+```{r Service Industry Investigation}
+crime[crime$wser>2000,]
+```
+
+It is county 185, Warren County. The only sector that has a weekly wage so much higher than for the other counties is the service industry, with all other sectors having a weekly wage very close to the state average. One might wonder if this county is particularly attractive for tourism, or some other sort of services, to explain such a difference. That is not the fact: Warren county is a center of tobacco and cotton plantations, and textile mills (https://en.wikipedia.org/wiki/Warren_County,_North_Carolina). It is very likely the value is multiplied by 10, and the actual value is 217.7068 instead of 2177.068. However, since we cannot atest that with certainty, we will leave the value as it is, and will not discard the observation.
+
+
+### Model Building Process
+
+>>> Our dpendent variable. Why we chose them. (base model)
+- crime rate
+>>> Our explanatory variables
+Certainty of punishment:
+- prob. of arrest: ratio of arrests to offenses (maybe stricter arrest protocols are required)
+- prob. of conviction: ratio of convictions to arrests (stricter conviction laws)
+Ceverity of punishment:
+- prob. of prison: ratio of convictions resulting in a prison sentence to total convictions (prison sentence, being one of the toughest convictions, might deter criminals)
+
+
+```{r}
+hist(crime$crmrte, breaks = 20, xlab="Crime Rate")
+hist(log(crime$crmrte), breaks = 20, xlab="Crime Rate (log)")
+```
+
+```{r}
+#conver to log
+crime$logcrmrte <- log(crime$crmrte)
+```
+
+```{r}
+#assessment of key variables
+summary(crime$logcrmrte)
+```
+
+
+```{r}
+#assessment of independent variables
+summary(crime$prbarr)
+summary(crime$prbconv)
+summary(crime$prbpris)
+```
+
+```{r}
+#histograms of independent variables
+hist(crime$prbarr, breaks = 40, xlab="Probability of Arrest")
+hist(crime$prbconv, breaks = 40, xlab="Probability of Conviction")
+hist(crime$prbpris, breaks = 40, xlab="Probability of Prison")
+```
+
+```{r}
+#scatterplots for an overview of key variables that we decided to include in based model and model 2
+scatterplotMatrix(~ logcrmrte+ prbarr + prbconv + prbpris, data = crime)
+```
+
+
+>>> Summary statistics
+>>> No top coding or bottom coding observed
+>>> Normal distribution 
+>>> Linear relationship with logcrmrte. prbpris doesn't seem to have a linear relationship
+
+
+
+>>> Our explanatory variables (model2)
+Certainty of punishment:
+- polic per capita: more cops could result in higher probability of arrest
+Ceverity of punishment:
+- avg. prison sentence: the longer, the stronger deterrent
+
+```{r}
+hist(crime$polpc, breaks = 20, xlab="Police per Capita")
+hist(log(crime$polpc), breaks = 20, xlab="Police per Capita (log)")
+hist(crime$avgsen, breaks = 20, xlab="Avg. Prison Sentence")
+hist(log(crime$avgsen), breaks = 20, xlab="Avg. Prison Sentence (log)")
+```
+
+
+```{r}
+#convert to log
+crime$logavgsen <- log(crime$avgsen)
+crime$logpolpc <- log(crime$polpc)
+```
+
+```{r}
+#assessment of key variables
+summary(crime$logpolpc)
+summary(crime$logavgsen)
+```
+
+
+```{r}
+boxplot(crime$logavgsen, horizontal = T, outline = T, xlab="Police per Capita (log)") #no extreme outlier
+boxplot(crime$logpolpc, horizontal = T, outline = T, xlab="Avg. Prison Sentence (log)") #one extreme outlier
+```
+
+```{r}
+#scatterplots for an overview of key variables that we decided to include in based model and model 2
+scatterplotMatrix(~ logcrmrte + logavgsen + logpolpc, data = crime)
+```
+
+>>> model3
+
+```{r}
+hist(crime$mix, breaks = 20, xlab="Offense mix")
+hist(log(crime$mix), breaks = 20, xlab="Offense mix (log)")
+
+```
+
+
+```{r}
+#conver to log
+crime$logmix <- log(crime$mix)
+```
+
+
+```{r}
+summary(crime$logmix)
+```
+
+
+### Regression Models
+We would like to address our key research question to understand whether strict criminal laws and their enforement result in lower crime rate. 
+
+1. Base Model:
+
+```{r}
+model1 <- lm(logcrmrte ~ prbarr + prbconv + prbpris, data = crime)
+baselm
+```
+
+```{r}
+summary(model1)$r.squared
+AIC(model1)
+```
+
+>>> include explanation of coefficients. What are we measuring with each coefficient? 
+>>> interpret the result of the regression
+>>> 6 CLM assumptions (linearity, iid sample, no perfect collinearity, zero conditional mean, homoskedasticity, normality)
+>>> interpret the results in terms of their research question
+
+```{r influence}
+plot(model1)
+```
+
+
+```{r}
+hist(model1$residuals, breaks = 20)
+```
+
+```{r}
+shapiro.test(model1$residuals) #check for normality
+bptest(model1) #check for heteroskedasticity
+```
+
+- Shapiro-Wilk test: p-value > 0.05, which means we can not reject the null hypothesis (residuals are drawn from a population with normal distribution). In other words the residuals in our model are normally distributed.
+- Breusch-Pagan test: p-value > 0.05, which means our null hyothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
+
+
+2. Model 2
+
+
+```{r}
+model2 <- lm(logcrmrte ~ prbarr + prbconv + prbpris + logpolpc + logavgsen, data = crime)
+model2
+```
+
+
+```{r}
+summary(model2)$r.squared
+AIC(model2)
+```
+
+```{r influence}
+plot(model2)
+```
+
+```{r}
+hist(model2$residuals, breaks = 20)
+```
+
+
+```{r}
+shapiro.test(model2$residuals) #Shapiro-Wilk test to check for normality
+bptest(model2) #Breusch-Pagan test to check for heteroskedasticity
+```
+- Shapiro-Wilk test: p-value < 0.05, which means we can reject the null hypothesis (residuals are drawn from a population with normal distribution). In other words the residuals in our model are not normally distributed.
+- Breusch-Pagan test: p-value > 0.05, which means our null hyothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
+
+3. Model 3
+
+```{r}
+model3 <- lm(logcrmrte ~ prbarr + prbconv + prbpris + logpolpc + logavgsen + taxpc + density + 
+   west + central + urban + pctmin80 + + wcon + wtuc + wtrd + 
+   wfir + wser + wmfg + wfed + wsta + wloc + logmix + pctymle, data = crime)
+model3
+```
+
+
+```{r}
+summary(model3)$r.squared
+AIC(model3)
+```
+
+```{r influence}
+plot(model3)
+```
+
+```{r}
+hist(model3$residuals, breaks = 20)
+```
+
+```{r}
+shapiro.test(model3$residuals) #Shapiro-Wilk test to check for normality
+bptest(model3) #Breusch-Pagan test to check for heteroskedasticity
+```
+- Shapiro-Wilk test: p-value > 0.05, which means we can not reject the null hypothesis (residuals are drawn from a population with normal distribution). In other words the residuals in our model are normally distributed.
+- Breusch-Pagan test: p-value < 0.05, which means our null hyothesis (absence of heteroskedasticity) can be rejected. In other words there is heteroskedasticity in our model.
+
+
+### Regression Table
+
+```{r, mylatextable, results = "asis"}
+stargazer(model1, model2, model3,  type = "text", 
+          report = "vc", # Don't report errors
+          title = "Linear Models Crime Rate",
+          keep.stat = c("rsq", "n"),
+          omit.table.layout = "n") # Omit more output related to errors
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
