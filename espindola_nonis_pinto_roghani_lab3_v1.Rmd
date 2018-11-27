@@ -1,5 +1,5 @@
 ---
-title: 'Reducing Crime'
+title: 'Can Crime Rates be Reduced by a Tougher Criminal Justice System?'
 subtitle: 'MIDS W203, Fall 2018, Lab 3'
 author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
