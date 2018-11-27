@@ -71,3 +71,26 @@ map_plot <- function(column, title)
         ggtitle(title, subtitle = 'North Carolina') +
         scale_fill_gradientn(colors = rev(brewer.pal(11, 'RdYlGn')))
 }
+
+sBuild <- function(dat,out){
+    tbl_df(t(sapply(1:ncol(dat), function(n){
+        x <- crime[,n]
+        c(  Variable =   colnames(dat)[n], CrimeCOR  = round(cor(out,x), 2),
+            Mean     = round( mean(x), 2), Median    = round( median(x), 2),
+            Min      = round(  min(x), 2), Max       = round(    max(x), 2),
+            SD       = round(   sd(x), 2),
+            Spread   = list(x),            Histogram = list(hist(x, plot = F)$counts))
+    })))
+}
+
+sTable <- function(tab){
+    formattable(tab, list(CrimeCOR = color_bar("powderblue"), SD = color_bar("orange"),
+                          Spread = function(z){
+                              sapply(z, function(zz){
+                                  knit(text = sprintf("`r sparkline(c(%s), type='box')`",
+                                                      paste0(zz, collapse = ",")), quiet = T)})},
+                          Histogram = function(z){
+                              sapply(z, function(zz){
+                                  knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
+                                                      paste0(zz, collapse = ",")), quiet = T)})}
+    ))}
