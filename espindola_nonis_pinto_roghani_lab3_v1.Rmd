@@ -72,89 +72,90 @@ Our recommendations will be based on sound statistically significant and practic
 
 The primary data source for our study is **Cornwell and W. Trumball (1994), “Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366**. We will use a single cross-section of data for **1987** from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
 
-The **Cornwell Dataset** is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
+The dataset is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
 
-The **Cornwell Dataset** contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly.
+The dataset contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly. These issues were easily corrected as shown below.
 
 ```{r loading}
 crime           <- read.csv('crime_v2.csv')
 crime           <- na.omit(crime)
 crime           <- crime[!duplicated(crime$county),]
-crime$prbconv   <- as.numeric(as.character(crime$prbconv))
 rownames(crime) <- NULL
+
+crime$prbconv   <- as.numeric(as.character(crime$prbconv))
 crime.numeric   <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
 
 dim(crime)
 ```
 
+```{r crimemap, fig.align = 'center', warning = FALSE}
+source('assets/maps.R')
+map('crmrte', 'Crime Rate per Capita')
+```
+From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map above shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects.
 
-From the 100 counties of North Carolina our dataset contain a sample of **90** counties; it contains **25** metrics from the following aspects.
-
-+ Identification
++ <b>Identification</b>
   - county, year
-+ Crime & Law Enforcement
++ <b>Crime & Law Enforcement</b>
   - crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
-+ Demographics & Geography
++ <b>Demographics & Geography</b>
   - density, west, central, urban
   - pctmin80, taxpc, pctymle
-+ Hourly Wages
++ <b>Weekly Wages</b>
   - wcon, wfir, wmfg, wser, wtrd, wtuc
-  - wfed, wsta, wloc [government]
+  - wfed, wsta, wloc [government workers]
 
 ## Summary of the Variables
+
+<b>TODO : Break into 3 Tables - Crime & Law Enforcements, Demographics & Geography, Weekly Wages</b>
 
 ```{r summary, echo = FALSE, warning = FALSE, results="asis"}
 
 crime.summary <- tbl_df(t(sapply(1:25, function(n)
-                 {
-                    x <- crime[,n]
-                    c(Variable = colnames(crime)[n],
-                      Mean     = round(  mean(x), 1),
-                      Median   = round(median(x), 1),
-                      SD       = round(    sd(x), 1),
-                      Min      = round(   min(x), 1),
-                      Max      = round(   max(x), 1),
-                      CrimeCOR = round(cor(crime$crmrte,x), 2),
-                      Spread   = list(x),
-                      Nominal  = list(hist(    x , plot = F)$counts),
-                      Log      = list(hist(log(x), plot = F)$counts)
-                    )
-                 })))
-
+{
+    x <- crime[,n]
+    c(
+        Variable = colnames(crime)[n],
+        Mean     = round(  mean(x), 2),
+        Median   = round(median(x), 2),
+        SD       = round(    sd(x), 2),
+        Min      = round(   min(x), 2),
+        Max      = round(   max(x), 2),
+        CrimeCOR = round(cor(crime$crmrte,x), 2),
+        Spread   = list(x),
+        Nominal  = list(hist(    x , plot = F)$counts),
+        Log      = list(hist(log(x), plot = F)$counts)
+    )
+})))
 
 formattable(crime.summary, list(
-            CrimeCOR = color_bar("pink"),
-            Spread  = function(z)
-            {
-                sapply(z, function(zz)
-                {
-                    knitr::knit(text = sprintf("`r sparkline(c(%s), type='box')`",
-                                               paste0(zz, collapse = ",")), quiet = TRUE)
-                })
-            },
-            Nominal  = function(z)
-            {
-                sapply(z, function(zz)
-                {
-                    knitr::knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
-                                               paste0(zz, collapse = ",")), quiet = TRUE)
-                })
-            },
-            Log  = function(z)
-            {
-                sapply(z, function(zz)
-                {
-                    knitr::knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
-                                               paste0(zz, collapse = ",")), quiet = TRUE)
-                })
-            }))
-
-
+    CrimeCOR = color_bar("powderblue"),
+    Spread  = function(z)
+    {
+        sapply(z, function(zz)
+        {
+            knit(text = sprintf("`r sparkline(c(%s), type='box')`",
+                                paste0(zz, collapse = ",")), quiet = TRUE)
+        })
+    },
+    Nominal  = function(z)
+    {
+        sapply(z, function(zz)
+        {
+            knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
+                                paste0(zz, collapse = ",")), quiet = TRUE)
+        })
+    },
+    Log  = function(z)
+    {
+        sapply(z, function(zz)
+        {
+            knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
+                                paste0(zz, collapse = ",")), quiet = TRUE)
+        })
+    }
+))
 ```
-
-<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
-
-Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
 
 <b>DISCUSS IMPORTANT VARIABLE IN MORE DETAIL</b>
 
@@ -173,11 +174,6 @@ corrplot(crime.correlation, diag = FALSE, order = 'FPC', type = "upper")
 
 
 ## Analysis of the Outcome Variable
-
-```{r crime, fig.align = 'center', warning = FALSE}
-source('assets/maps.R')
-map('crmrte', 'Crime Rate per Capita')
-```
 
 <br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
 
@@ -208,7 +204,7 @@ plot_grid(p1, p2)
 
 Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
 
-## Correction of Anamolies
+## Correction of Anomalies
 
 We had to address the following anomalies in the dataset.
 
@@ -224,7 +220,6 @@ We could assume that the data used to calculate these probabalities were inconsi
 
 
 The outcome variable of our study is (crmrte) which is coded as 'crimes per person'.
-
 
 - What do you want to measure? Make sure you identify variables that will be relevant to the concerns of the political campaign.
 
