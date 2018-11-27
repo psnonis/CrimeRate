@@ -1,0 +1,83 @@
+---
+title: 'Can Crime Rates be Reduced by a Tougher Criminal Justice System?'
+subtitle: 'MIDS W203, Fall 2018, Lab 3'
+author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
+output:
+    prettydoc::html_pretty:
+        theme: architect
+        highlight: github
+        toc: true
+        number_sections: true
+---
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+source('assets/utility.R')
+
+import('knitr')
+import('kableExtra')
+import('tidyverse')
+import('RColorBrewer')
+import('ggthemes')
+import('stargazer')
+import('lmtest')
+import('maps')
+import('formattable')
+import('sparkline')
+import('cowplot')
+import('corrplot')
+import('ggfortify')
+import('GGally')
+
+options(digit = 2, warn = -1)
+```
+
+
+# Omitted Variables Analysis
+
+We have proposed to model the logarithm of the crime rate `log(crmrte)` as a linear combination of the probability of arrest `prbarr`, the probability of conviction `prbconv`, and the probability of prison `prbpris`.
+<br/>
+
+However, other variables might impact the Crime Rate<br/>
+
+* Percent of Population with Registered Guns `guns`
+* Average Years of Education `avgeduc`
+* Unemployment Rates `unmprt`
+* Percent of Population Below the Poverty Line `pctpov`
+
+Based on this a more realistic model may look like the following.
+$$
+log(crmrte) = \beta_0 + \beta_1 \cdot prbarr + \beta_2 \cdot prbconv + \beta_3 \cdot prbpris + \beta_4 \cdot guns \\
++ \beta_5 \cdot avgeduc + \beta_6 \cdot unmprt + \beta_7 \cdot pvtpov + u
+$$
+
+Compared to the base model, build using the available data.
+
+$$
+log(crmrte) = \alpha_0 + \alpha_1 \cdot prbarr + \alpha_2 \cdot prbconv + \alpha_3 \cdot prbpris + w
+$$
+
+To assess the direction of the bias, we will analyse each omitted variable.
+
+
+```{r, echo=FALSE, include=TRUE, results="asis"}
+library(knitr)
+
+bias_table <- data.frame(c("Percent of Population with Registered Guns","$guns = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_4 > 0$ \\ accidental gunshots, bad reactions in traffic, wrongly assuming risk",
+                           "$\\gamma_1 > 0$ \\ easier to catch crimes commited with registered guns", "$\\gamma_2 > 0$ \\ easier to convict with more evidence - registered gun","$\\gamma_3 > 0$ \\ more likely to issue a sentence with prison time for crimes commited with a gun", "$\\gamma_1 \\cdot \\beta_4 > 0$ - positive bias - $\\beta_1$ superestimated \\ $\\gamma_2 \\cdot \\beta_4 > 0$ - positive bias - $\\beta_2$ superestimated \\ $\\gamma_3 \\cdot \\beta_4 > 0$ - positive bias - $\\beta_3$ superestimated"), c("Average Years of Education","$avgeduc = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_5 < 0$ \\ more education leads to more tolerance and better understanding of the laws",
+                           "$\\gamma_1 < 0$ \\ more educated people will take some extra precaution about getting caught", "$\\gamma_2 = 0$ \\ conviction is related to the nature and the evidences for each crime, not the person commiting it","$\\gamma_3 = 0$ \\ the issuing of a sentence should be only related to the nature of the crime commited", "$\\gamma_1 \\cdot \\beta_5 > 0$ - positive bias - $\\beta_1$ superestimated"), c("Unemployment Rates","$unmprt = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_6 > 0$ \\ unemployment might lead to people seeking illegal forms of income",
+                           "$\\gamma_1 = 0$ \\ arrest should be related to the evidences available for the police to catch the criminal", "$\\gamma_2 = 0$ \\ conviction is related to the nature and the evidences for each crime, not the person commiting it","$\\gamma_3 > 0$ \\ judges might consider that an unemployed person is more likely to commit a crime again, as means of income, and would be more prone to issuing a sentence with prison time", "$\\gamma_3 \\cdot \\beta_6 > 0$ - positive bias - $\\beta_3$ superestimated"), c("Percent of Population Below the Poverty Line","$pctpov = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_7 > 0$ \\ poverty might lead to people seeking illegal forms of income",
+                           "$\\gamma_1 = 0$ \\ arrest should be related to the evidences available for the police to catch the criminal", "$\\gamma_2 = 0$ \\ conviction is related to the nature and the evidences for each crime, not the person commiting it","$\\gamma_3 > 0$ \\ judges might consider that a very poor person is more likely to commit a crime again, as means of income, and would be more prone to issuing a sentence with prison time", "$\\gamma_3 \\cdot \\beta_7 > 0$ - positive bias - $\\beta_3$ superestimated"))
+
+colnames(bias_table) <- c("guns", "avgeduc", "unmprt", "pctpov")
+rownames(bias_table) <- c("Description" ,"Linear Model Expression", "Coefficient Value for Crime Rate / Explanation","Value for $\\gamma_1$ (coefficient for prbarr) / Explanation","Value for $\\gamma_2$ (coefficient for prbconv) / Explanation", "Value for $\\gamma_3$ (coefficient for prbpris) / Explanation", "Bias")
+
+kable(bias_table, escape = FALSE)
+```
+## Bias Conclusion
+
+By the analysis we have made, the ommited variables impose a positive bias in all the coefficients for the present variables, meaning our model is actually superestimating the correlation between each independent variable and our dependent variable
+
