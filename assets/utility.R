@@ -42,7 +42,7 @@ pHist <- function(x, breaks, label)
         theme_economist()
 }
 
-map_setup <- function()
+mSetup <- function()
 {
     cfips           <<- county.fips[grepl('north carolina', county.fips$polyname),] # fips for NC counties
     cfips           <<- rename(cfips, county = fips, subregion = polyname)          # conform column names
@@ -58,7 +58,7 @@ map_setup <- function()
     ncmap           <<- left_join(ncmap, crime, by = 'county')                 # append crime data
 }
 
-map_plot <- function(column, title)
+mMapNC <- function(column, title)
 {
     ggplot(data = ncmap, mapping = aes_string(x = 'long', y = 'lat', group = 'group', fill = column)) +
         geom_polygon(color = 'black', size = 0.025) + theme_wsj() +

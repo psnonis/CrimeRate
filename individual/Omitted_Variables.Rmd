@@ -39,18 +39,23 @@ options(digit=3)
 
 # Omitted Variables Analysis
 
-We have proposed to model the logarithm of the crime rate ($log(crmrte)$) as a linear combination of the probability of arrest $prbarr$, the probability of conviction ($prbconv$), and the probability of prison ($prbpris$). However, we understand that other variables might impact the crime rate:
-- Percent of population with registered guns ($guns$);
-- Average years of education ($avgeduc$);
-- Unemployment rates ($unmprt$);
-- Percent of the population below the poverty line ($pctpov$)
+We have proposed to model the logarithm of the crime rate `log(crmrte)` as a linear combination of the probability of arrest `prbarr`, the probability of conviction `prbconv`, and the probability of prison `prbpris`.
+<br/>
 
-So we assume the real model would be:
+However, other variables might impact the Crime Rate<br/>
+
+* Percent of Population with Registered Guns `guns`
+* Average Years of Education `avgeduc`
+* Unemployment Rates `unmprt`
+* Percent of Population Below the Poverty Line `pctpov`
+
+Based on this a more realistic model may look like the following.
 $$
-log(crmrte) = \beta_0 + \beta_1 \cdot prbarr + \beta_2 \cdot prbconv + \beta_3 \cdot prbpris + \beta_4 \cdot guns + \beta_5 \cdot avgeduc + \beta_6 \cdot unmprt + \beta_7 \cdot pvtpov + u
+log(crmrte) = \beta_0 + \beta_1 \cdot prbarr + \beta_2 \cdot prbconv + \beta_3 \cdot prbpris + \beta_4 \cdot guns \\
++ \beta_5 \cdot avgeduc + \beta_6 \cdot unmprt + \beta_7 \cdot pvtpov + u
 $$
 
-But the sample model is:
+Compared to the base model, build using the available data.
 
 $$
 log(crmrte) = \alpha_0 + \alpha_1 \cdot prbarr + \alpha_2 \cdot prbconv + \alpha_3 \cdot prbpris + w
@@ -58,9 +63,9 @@ $$
 
 To assess the direction of the bias, we will do an analysis for each omitted variable.
 
-## Percent of population with registered guns (guns)
+## Percent of Population with Registered Guns
 
-North Carolina has no law that requires the comprehensive registration of firearms throughout the state. However, the sheriff of each county must keep a record of all permits to purchase a handgun, including the name, date, place of residence, and age of each person to whom a permit is issued. We could reach out for this information for a more accurate representation, however, we will now focus on assessing the bias of this variable. First, we will write the $guns$ variable as a linear combination of the variables we do have the data for:
+North Carolina has no law that requires the comprehensive registration of firearms throughout the state. However, the sheriff of each county must keep a record of all permits to purchase a handgun, including the name, date, place of residence, and age of each person to whom a permit is issued. We could reach out for this information for a more accurate representation, however, we will now focus on assessing the bias of this variable. First, we will write the `guns` variable as a linear combination of the variables we do have the data for:
 
 $$
 guns = \gamma_0 +\gamma_1 \cdot prbarr + \gamma_2 \cdot prbconv + \gamma_3 \cdot prbpris +v
@@ -84,7 +89,7 @@ $$
 \alpha_3 > \beta_3 \\
 $$
 
-## Average years of education (avgeduc)
+## Average Years of Education
 
 That information can be obtained in census databases. For assessing the bias this variable has on the available ones, we must write $avgeduc$ as a linear combination of the variables we do have the data for:
 
@@ -108,7 +113,7 @@ $$
 \alpha_1 > \beta_1 \\
 $$
 
-## Unemployment rates (unmprt)
+## Unemployment Rates
 
 That information can be obtained in census databases. For assessing the bias this variable has on the available ones, we must write $unmprt$ as a linear combination of the variables we do have the data for:
 
@@ -131,7 +136,8 @@ $\beta_6$ is positive, and so is $\gamma_3$, however, $\gamma_1$ and $\gamma_2$ 
 $$
 \alpha_3 > \beta_3 \\
 $$
-## Percent of the population below the poverty line (pctpov)
+
+## Percent of Population Below the Poverty Line
 
 That information can be obtained in census databases. For assessing the bias this variable has on the available ones, we must write $pctpov$ as a linear combination of the variables we do have the data for:
 
@@ -154,7 +160,6 @@ $\beta_7$ is positive, and so is $\gamma_3$, however, $\gamma_1$ and $\gamma_2$ 
 $$
 \alpha_3 > \beta_3 \\
 $$
-
 
 ## Omitted Variable Bias Conclusion
 
