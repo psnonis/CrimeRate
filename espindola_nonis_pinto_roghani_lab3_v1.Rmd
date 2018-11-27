@@ -15,8 +15,6 @@ text-align: justify}
 </style>
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
 source('assets/utility.R')
 
 import('knitr')
@@ -34,7 +32,7 @@ import('corrplot')
 import('ggfortify')
 import('GGally')
 
-options(digit=3)
+options(digit = 2, warn = -1)
 ```
 
 # Introduction and Research Question
@@ -87,8 +85,8 @@ dim(crime)
 From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects.
 
 ```{r crime_map, fig.height = 4.5, fig.align = 'center', warning = FALSE}
-source('assets/maps.R')
-map('crmrte', 'Crime Rate per Capita')
+map_setup()
+map_plot('crmrte', 'Crime Rate per Capita')
 ```
 
 The missing counties appear to be geographically diverse and gives no reason to suspect the sample quality in terms of randomness, at least with respect to geographical clustering.
@@ -188,6 +186,10 @@ corrplot(crime.correlation, diag = FALSE, order = 'FPC', type = "upper")
 
 # Model Building Process
 
+```{r options, hide = TRUE}
+options(digits = 2)
+```
+
 > - What do you want to measure? Make sure you identify variables that will be relevant to the concerns of the political campaign.
 > - What covariates help you identify a causal effect?
 > - What covariates are problematic, either due to multicollinearity, or because they will absorb some of a causal effect you want to measure?
@@ -215,12 +217,6 @@ plot_grid(p1, p2)
 crime$crmrte.log <- log(crime$crmrte) # log transformation
 ```
 
-Summary statistics of the transformed variable, doesn’t show any issues.
-
-```{r outcome_summary}
-summary(crime$crmrte.log) # assessment of key variables
-```
-
 ## Explanatory Variables, Base Model
 
 As explained in the introduction, in order to test our hypothesis regarding the impact of a tougher criminal justice system on crime rate, we are using 3 explanatory variables in our base model:
@@ -232,12 +228,6 @@ As explained in the introduction, in order to test our hypothesis regarding the 
 Looking at the summary statistics of the 3 variables, we don’t see any alarming issues. Also, histograms show a fairly normal distribution for all 3 variables. Although, there is 1 extreme outlier in `prbarr` and one in `prbarr` (which are both from the same observation, county 115) we decided to keep them in our data because we don’t have any reason to believe that they are erroneous values. That said, we will evaluate the influence of these extreme point during or diagnostic analysis of regression models. 
 
 County 115 consistently shows up in the histograms of crime rate, prbarr and prbconv as an extreme outlier. It has a low density (below first quartile), which could be the reason for the unusual values  in our variables of interest.
-
-```{r m1_explanatory_summary}
-summary(crime$prbarr ) # assessment of explanatory variables
-summary(crime$prbconv) # assessment of explanatory variables
-summary(crime$prbpris) # assessment of explanatory variables
-```
 
 ```{r m1_explanatory_plot, fig.align = 'center', warning = FALSE}
 p1 <- pHist(crime$prbarr,  breaks = 40, label = "Probability of Arrest"    )
@@ -280,14 +270,7 @@ crime$avgsen.log <- log(crime$avgsen) # log transformation
 crime$polpc.log  <- log(crime$polpc ) # log transformation
 ```
 
-Summary statistics of the transformed variables, don't show any issues.
-
-```{r m2_explanatory_summary}
-summary(crime$polpc.log ) # assessment of key variables
-summary(crime$avgsen.log) # assessment of key variables
-```
-
-We then looked at the scatterplots of dependent and the additional explanatory variables for our second model. None of the additional variables seem to have a perfect linear relationship with the independet variable. But since we have already implemented a log transformation and seen improvment in variable distributions, we will not take additional steps to modify our variables and use them in their current state.
+Looking at the scatterplots of dependent and the additional explanatory variables for our second model. None of the additional variables seem to have a perfect linear relationship with the independet variable. But since we have already implemented a log transformation and seen improvment in variable distributions, we will not take additional steps to modify our variables and use them in their current state.
 
 ```{r m2_correlation, fig.align = "center", warnings = FALSE}
 ggscatmat(crime, columns = c(26,27,28)) + geom_smooth(method = "lm") + theme_economist()
@@ -310,12 +293,6 @@ plot_grid(p1, p2)
 crime$mix.log <- log(crime$mix) # log transformation
 ```
 
-We don’t see any issue in the summary statistics of the transformed variable `mix.log`.
-
-```{r m3_explanatory_summary}
-summary(crime$mix.log)
-```
-
 # Regression Models
 
 We would like to address our key research question to understand whether strict criminal laws and their enforement result in lower crime rate. 
@@ -335,12 +312,13 @@ $$
 
 ```{r m1}
 m1 <- lm(crmrte.log ~ prbarr + prbconv + prbpris, data = crime)
-m1
 ```
 
 ### Coefficients
 
-- $\beta_0$ : `intercept` is -2.6846, which can not be interpreted in a meaningful way without considering other coefficients.
+While holding all other covariates and ubobserved factors fixed:
+
+- $\beta_0$ : `intercept` is -2.6846, which can not be interpreted in a meaningful way without considering other coefficients
 - $\beta_1$ : `prbarr` coefficient is -1.9992, which means we could predict that for every 0.01 increase in probability of arrest, crime rate will go down by approximately 1.99%, while holding all other covariates and unobserved factors fixed.
 - $\beta_2$ : `prbconv` coefficient is -0.7364, which means we could predict that for every 0.01 increase in probability of conviction, crime rate will go down by approximately 0.74%, while holding all other covariates and unobserved factors fixed.
 - $\beta_3$ : `prbpris` coefficient is 0.388, which means that every 0.01 increase in probability of prison is associated with a 0.39% increase in crime rate, while holding all other covariates and unobserved factors fixed.
@@ -349,13 +327,8 @@ It is worth noting that the coefficients for `prbarr` and `prbconv` amplify the 
 
 ### Goodness of Fit
 
-The R-squared of the base model is  0.4505, which means around 45% of the variation in crime rate could be explained by our model
-AIC (Akaike Information Criterion): The AIC value for base model is 102.4805, which we will compare with those of the next models to evaluate goodness of fit
-
-```{r m1_summary}
-summary(m1)$r.squared
-AIC(m1)
-```
+* The R-squared value for the base model is `r summary(m1)$r.squared`, which means around 45% of the variation in crime rate could be explained by our model.
+* The Akaike Information Criterion value for the base model is `r AIC(m1)`, which we will compare with those of the next models to evaluate goodness of fit.
 
 ### 6 CLM Assumptions
 
@@ -392,29 +365,17 @@ Most points are on, or fairly close to the diagonal line, based on which we can 
 <br/>
 Despite the fact that points on chart seem to spread out as we move to the right, there is not strong sign of heteroskedasticity, since we have very few points on the left side.
 
-<b>Residuals vs Leverage</b
+<b>Residuals vs Leverage</b>
 <br/>
 As suspected, the residual from observation row 51 (county 115), has a high influence on our model, with a Cook’s distance of about 1
 
 <b>Breusch-Pagan Test</b>
 <br/>
-In order to evaluate CLM assumption 5 `homoskedasticity` we used the Breusch-Pagan test.
-
-```{r m1_heteroskedasticity}
-bptest(m1) # check for heteroskedasticity
-```
-
-The p-value is greater than 0.05, which means our null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
+In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m1)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
 
 <b>Shapiro-Wilk Test</b>
 <br/>
-In order to evaluate CLM assumption 6 `normality` we used the Shapiro-Wilk test.
-
-```{r m1_normality}
-shapiro.test(m1$residuals) # check for normality
-```
-
-The p-value is greater than 0.05, which means we can not reject the null hypothesis (that residuals are drawn from a population with normal distribution). In other words the residuals in our model are normally distributed.
+In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m2$residuals)$p.value`</b> is greater than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can not be rejected. In other words the residuals in our model are normally distributed.
 
 ### Interpretation and Conclusion
 
@@ -454,13 +415,8 @@ While holding all other covariates and ubobserved factors fixed:
 
 ### Goodness of Fit
 
-The R-squared of the base model is  0.6101, which means around 61% of the variation in crime rate could be explained by our model. Even though this is a higher number compared to our base model, it doesn’t necessarily show a better fit because when we add variables R-squared goes up anyway. That is the reason we look at the AIC value to compare the 2 models in terms of goodness of fit.
-AIC (Akaike Information Criterion): The AIC value for base model is 75.60, which is lower than that of base model (102.5). Therefore, we can say that our model 2 is more accurate than the base model.
-
-```{r m2_summary}
-summary(m2)$r.squared
-AIC(m2)
-```
+* The R-squared value for the extended model is `r summary(m2)$r.squared`, which means around 61% of the variation in crime rate could be explained by our model. Even though this is a higher number compared to our base model, it doesn’t necessarily show a better fit because when we add variables R-squared goes up anyway. Because of this we look at the AIC value to compare the 2 models in terms of goodness of fit.
+* The Akaike Information Criterion value for extended model is `r AIC(m2)`, which is lower than that of base model value `r AIC(m1)`. This confirms that model 2 is more accurate than the base model.
 
 ### 6 CLM Assumptions
 
@@ -503,23 +459,11 @@ As in the base model, the residual from observation row 51 (county 115), has a h
 
 <b>Breusch-Pagan Test</b>
 <br/>
-In order to evaluate CLM assumption 5 `homoskedasticity` we used the Breusch-Pagan test.
-
-```{r m2_heteroskedasticity}
-bptest(m2) # check for heteroskedasticity
-```
-
-The p-value is greater than 0.05, which means our null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
+In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m2)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
 
 <b>Shapiro-Wilk Test</b>
 <br/>
-In order to evaluate CLM assumption 6 `normality` we used the Shapiro-Wilk test.
-
-```{r m2_normality}
-shapiro.test(m2$residuals) # check for normality
-```
-
-The p-value is smaller than 0.05, which means we can reject the null hypothesis (that residuals are drawn from a population with normal distribution). That said, given the sample size of >30 we can assume that the sampling distribution of our coefficients is normal, so assumption 6 (normality) still holds in our model.
+In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m2$residuals)$p.value`</b> is smaller than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can be rejected. That said, given the sample size of >30 we can assume that the sampling distribution of our coefficients is normal, so assumption 6 (normality) still holds in our model.
 
 ### Interpretation and Conclusion
 
@@ -539,20 +483,11 @@ $$
 $$
 
 ```{r m3}
-m3 = lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log+
-        density+taxpc+west+central+urban+pctmin80+wcon+wtuc+
-        wtrd+wfir+wser+wmfg+wfed+wsta+wloc+log(mix)+pctymle, data = crime)
-
-m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + polpc.log + avgsen.log + 
-                 taxpc + density + west + central + urban + pctmin80 + wcon +
-                 wtuc + wtrd + wfir + wser + wmfg + wfed + wsta + wloc +
-                 mix.log + pctymle, data = crime)
-m3
-```
-
-```{r m3_summary}
-summary(m3)$r.squared
-    AIC(m3)
+m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log + mix.log +
+             density + taxpc + west + central + urban + pctmin80 + pctymle +
+             wcon + wtuc + wtrd + wfir + wser + wmfg + wfed + wsta +
+             wloc, data = crime)
+m3$coefficients
 ```
 
 ### Coefficients
