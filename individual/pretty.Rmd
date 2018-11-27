@@ -1,0 +1,66 @@
+---
+title: "Your Document Title"
+author: "Document Author"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+```{r setup}
+library(dplyr)
+library(formattable)
+library(sparkline)
+library(htmltools)
+```
+
+## Experiments
+
+```{r spark, echo=FALSE, results="asis"}
+crime           <- read.csv('crime_v2.csv')
+crime           <- na.omit(crime)
+crime           <- crime[!duplicated(crime$county),]
+crime$prbconv   <- as.numeric(as.character(crime$prbconv))
+rownames(crime) <- NULL
+crime.numeric   <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
+
+
+crime.summary   <- crime.summary <- tbl_df(t(sapply(1:25, function(n)
+                                    {
+                                        x <- crime[,n]
+                                        c(Variable = colnames(crime)[n],
+                                          Mean     = round(mean(x), 1),
+                                          SD       = round(  sd(x), 1),
+                                          Min      = round( min(x), 1),
+                                          Max      = round( max(x), 1),
+                                          Box      = list(x),
+                                          Hist     = list(x)
+                                        )
+                                    })))
+
+
+formattable(crime.summary, list(
+            Mean = color_bar("pink", proportion),
+            Box  = function(z)
+            {
+                sapply(z, function(zz)
+                {
+                    knitr::knit(
+                        text  = sprintf("`r sparkline(c(%s), type = 'box')`", paste0(zz, collapse = ",")),
+                        quiet = TRUE
+                    )
+                })
+            },
+            Hist  = function(z)
+            {
+                sapply(z, function(zz)
+                {
+                    knitr::knit(
+                        text  = sprintf("`r sparkline(hist(c(%s),plot=F)$counts, type = 'bar')`", paste0(zz, collapse = ",")),
+                        quiet = TRUE
+                    )
+                })
+            }))
+```
+

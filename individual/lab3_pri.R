@@ -49,7 +49,6 @@ crime.numeric     <- crime[, !names(crime) %in% c('county','year','west','centra
 crime.correlation <- round(cor(crime.numeric, use = 'pairwise.complete.obs'), 2 )
 crime.correlation.sqrt <- round(cor(sqrt(crime.numeric), use = 'pairwise.complete.obs'), 2)
 
-?cor
 
 corrplot(crime.correlation,         method = 'circle', type = 'lower',  order = 'FPC', diag = F)
 corrplot(crime.correlation.log_log, method = 'circle', type = 'lower',  order = 'FPC', diag = F)
@@ -130,9 +129,6 @@ for (x in names(crime.numeric)){
     m[x] = lm(paste(y1, '~', x1))
 }
 
-data(father.son)
-heights <- sample(father.son$fheight)
-
 pHist <- function(x)
 {
     ggplot() + geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
@@ -141,7 +137,7 @@ pHist <- function(x)
 }
 
 
-psHist(log(crime$crmrte))
+pHist(log(crime$crmrte))
 
 crime.correlation <- as.data.frame(as.table(cor(crime.numeric)))
 crime.correlation[crime.correlation$Var1=='crmrte',]

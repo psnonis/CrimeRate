@@ -17,8 +17,6 @@ text-align: justify}
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-options(digit=3)
-
 source('assets/utility.R')
 
 import('prettydoc')
@@ -31,11 +29,15 @@ import('stargazer')
 import('lmtest')
 import('maps')
 import('summarytools')
+import('formattable')
+import('sparkline')
+import('cowplot')
+import('corrplot')
+
+options(digit=3)
 ```
 
 # Introduction and Research Question
-
-<center>![Counties of North Carolina](assets/north_carolina.png)</center>
 
 The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign that has hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
 
@@ -56,11 +58,8 @@ We will primarily use these three explanatory variables as proxies to measure th
 The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the three explanatory variables Probability of Arrest, Probability of Conviction, and Probability of Prison. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
 
 + <b>Increasing arrest rates will decrease crime rate</b>
-<br/>Actionable through more technological and manpower resources allocated to law enforcement
 + <b>Increasing conviction rates will decrease crime rate</b>
-<br/>Actionable through stricter sentencing guidelines and more resources allocated to law enforcement agencies to collect higher quality evidence
 + <b>Increasing prison verdicts will decrease crime rate</b>
-<br/>Actionable through stricter sentencing guidelines for courts
 
 Our recommendations will be based on sound statistically significant and practically significant results. We hope to reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables. (causal vs associative ..?)
 
@@ -68,85 +67,388 @@ Our recommendations will be based on sound statistically significant and practic
 
 The primary data source for our study is **Cornwell and W. Trumball (1994), “Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366**. We will use a single cross-section of data for **1987** from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
 
-The **Cornwell Dataset** is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
+The dataset is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
 
-The **Cornwell Dataset** contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly.
+The dataset contained several technical defects such as empty (NA) rows, a duplicated row, and a typo that prevented a numeric variable from being loaded correctly. These issues were easily corrected as shown below.
 
 ```{r loading}
-crime         <- read.csv('crime_v2.csv')
-crime         <- na.omit(crime)
-crime         <- crime[!duplicated(crime$county),]
-crime$prbconv <- as.numeric(as.character(crime$prbconv))
+crime           <- read.csv('crime_v2.csv') # load the dataset
+rownames(crime) <- NULL                     # remove row names
 
-crime.numeric <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
+crime           <- na.omit(crime)                          # remove empty (NA) rows
+crime           <- crime[!duplicated(crime$county),]       # remove duplicated row
+crime$prbconv   <- as.numeric(as.character(crime$prbconv)) # fix non-numeric value
 
 dim(crime)
 ```
 
+From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects.
 
-From the 100 counties of North Carolina our dataset contain a sample of **90** counties; it contains **25** metrics from the following aspects.
-
- - Crime & Law Enforcement
-    crmrte, prbarr, prbconv, prbpris, avgsen, polpc, mix
- - Demographics & Geography
-    density, west, central, urban
-    pctmin80,taxpc, pctymle
- - Wages
-    w*(9)
-
-```{r}
-smoothScatter(crime$prbarr,crime$crmrte)
-crime$crmrte.log <- log(crime$crmrte)
-
-pHist <- function(x)
-{
-    ggplot() + geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
-        geom_vline(xintercept=mean(x),linetype="dashed",size=1,colour="blue") +
-        stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1, args = list(mean = mean(x), sd = sd(x))) +
-        theme_economist()
-}
-
-pHist(crime$crmrte)
-pHist(crime$crmrte.log)
-```
-
-```{r summary, results='hide'}
-#star.1 <- stargazer(crime, align = T, type = 'html', style = 'ajs', notes = 'Univariate Summary')
-```
-
-```{r}
-dfSummary(crime, style = "grid")
-```
-
-<br/>
-
-```{r crime, fig.align = 'center'}
+```{r crimemap, fig.align = 'center', warning = FALSE}
 source('assets/maps.R')
+
 map('crmrte', 'Crime Rate per Capita')
 ```
 
-<br/>
+The missing counties appear to be randomly distributed geographically and gives no reason to suspect the sample quality in that regard.
+
+## Summary of the Variables
+
+```{r summary, warning = FALSE}
+
+crime.summary <- tbl_df(t(sapply(1:25, function(n)
+{
+    x <- crime[,n]
+    c(
+        Variable  = colnames(crime)[n],
+        Mean      = round(  mean(x), 2),
+        Median    = round(median(x), 2),
+        SD        = round(    sd(x), 2),
+        Min       = round(   min(x), 2),
+        Max       = round(   max(x), 2),
+        CrimeCOR  = round(cor(crime$crmrte,x), 2),
+        Spread    = list(x),
+        Histogram = list(hist(    x , plot = F)$counts)
+    )
+})))
+
+sTable <- function(tab)
+{
+    formattable(tab, list(
+        CrimeCOR = color_bar("powderblue"),
+        Spread  = function(z)
+        {
+            sapply(z, function(zz)
+            {
+                knit(text = sprintf("`r sparkline(c(%s), type='box')`",
+                                    paste0(zz, collapse = ",")), quiet = TRUE)
+            })
+        },
+        Histogram  = function(z)
+        {
+            sapply(z, function(zz)
+            {
+                knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
+                                    paste0(zz, collapse = ",")), quiet = TRUE)
+            })
+        }
+    ))
+}
+```
+
+<b>Variable Catagories</b>
+
++ <b>Identification</b>
+```{r var_1, results="asis"}
+sTable(crime.summary[c(1,2),]) # Identification
+```
+
++ <b>Crime & Law Enforcement</b>
+```{r var_2, results="asis"}
+sTable(crime.summary[c(3,4,5,6,7,8,25),]) # Crime & Law Enforcement
+```
++ <b>Demographics & Geography</b>
+```{r var_3, results="asis"}
+sTable(crime.summary[c(9,10,11,12,13,14,25),]) # Demographics & Geography
+```
++ <b>Weekly Wages</b>
+```{r var4, results="asis"}
+sTable(crime.summary[c(15,16,17,18,19,20,21,22,23),]) # Weekly Wages
+```
+
+## Extended Variable Cleaning
+
+1. County (county): It is the county identifier, and as for the problem statement, we should have only one entry (one row) per county:
+
+```{r Checking for NA}
+crime[which(is.na(crime$county)),]
+```
+
+We have no data in these 6 rows, so for the purpose of our analysis, we can get it out
+
+```{r Taking of empty rows}
+crime<-crime[which(!is.na(crime$county)),]
+```
+
+Now, we must finally check for duplicate values:
+
+```{r Checking duplicate counties}
+crime[duplicated(crime),]
+```
+
+We have seen that we have two entries for county 193. The data structure we have should be one row for one county, which is why we are going to discard the extra entry for county 193
+
+```{r Keeping unique values}
+crime<-unique(crime)
+```
+
+If we check again for duplicates, it shows us none:
+
+```{r Checking for duplicates yet again}
+crime[duplicated(crime),]
+```
+
+2. Year (year): we have that all the observations come from the year of 1987, therefore, we should just check if there are other years on this dataset
+
+```{r Checking years}
+summary(crime$year)
+```
+
+And there we have it, only observations for 1987.
+
+3. Crime Rate (crmrte): It is calculated as ratio of number of reported crimes to the total population of the county. Theoretically, we could have values ranging from zero (no crimes commited in that county in 1987) to infinity (so many crimes committed that the ratio goes to infinity), however both these cases are extremes that don't make any logical sense. So we should check the distribution of this variable to try and spot weird observations:
+
+```{r Checking the Crime Rate}
+hist(x = crime$crmrte, main = "Crime Rate Distribution", xlab = "Crime Rate", ylab = "Frequency")
+summary(crime$crmrte)
+```
+
+There is nothing abnormal with the data, so it is safe to proceed.
+
+4. Probability of arres (prbarr): The probability of arrest is proxied by the ratio of arrests to offenses.
+
+```{r Checking the Probability of Arrest}
+hist(x = crime$prbarr, breaks=20, main = "Probability of Arrest Distribution", xlab = "Probability of Arrest", ylab = "Frequency")
+summary(crime$prbarr)
+```
+
+Probabilities should not be over 100%, so we should take a closer look at the observations where the probability of arrest were higher than 1
+
+```{r Checking Probability of Arrest Higher than 1}
+crime[crime$prbarr>1,]
+```
+
+For county 115, another thing jumps to the eye, the probability of conviction (prbpris, proxied by the ratio of convictions to arrests), is also higher than 1. Probabilities should range from 0 to 1, however, these anomalies might be due to the way those variables were proxied: probability of arrest is proxied by the ratio of arrests to offenses and the probability of conviction, by the ratio of convictions to arrests. They are not actual probabilities. One may argue that it makes no sense to have more arrests than offenses, or more convictions than arrests, however, we are looking at snapshot of 1987, and arrests made in that year might be referring both to offenses mad in 1987 and previously, which could explain the ration being over than one. The same line of thought applies for the probability of conviction variable: the convictions made in 1987 might be referring both to arrests made in 1987 and previously. For those reasons, we choose not to discard this observation.
+
+5. Probability of Conviction (prbconv): As we have seen previously, the probability of conviction is proxied by the ratio of convictions to arrests.
+
+```{r Probability of Conviction}
+summary(crime$prbconv)
+```
+
+The probability of conviction has some weird values, such one that is empty and another one that is `. We should take a look at those observations
+
+```{r Weird values for probability of conviction}
+crime$prbconv
+crime[crime$prbconv == '' | crime$prbconv=='`',]
+```
+
+The observations with these weird values have already been discarded on previous analysis, however, they still show up as factors, since they were first loaded like that. One way we could go is transforming that variable into a numeric one
+
+```{r Converting probability of conviction to numeric}
+crime$prbconv<-as.numeric(as.character(crime$prbconv))
+```
+
+Now we can perform the usual analysis:
+
+```{r Checking the Probability of Conviction}
+hist(x = crime$prbconv, breaks=20, main = "Probability of Conviction Distribution", xlab = "Probability of Conviction", ylab = "Frequency")
+summary(crime$prbconv)
+```
+
+Again, we see observations in which the probability of conviction is higher than 1, which shouldn't happen, if they were in fact probabilities. However, as we previously stated, by the method they were proxied, values above 1 are possible. But, nonetheless, we must analyze those cases in more detail.
+
+```{r Checking cases where the probability of conviction is higher than 1}
+crime[crime$prbconv>1,]
+```
+
+Those observations fall into the same issue we have seen for the probability of arrest variable. By the way they were proxied, the ratio of convictions to arrests in 1987 doesn't necessarily matches convictions in 1987 referring to arrests only made in 1987. There might be some convictions made in 1987 referring to arrests made in previous years in the mix, which is why we decide to keep those observations, as the same effect migh also be present in the observations where the probability of conviction was below 1.
+
+6. Probability of Prison Sentence (prbpris): The probability of prison sentence is proxied
+by the convictions resulting in a prison sentence to total convictions. In that case, unlike the other two previous variables we analyzed, the ratio is calculated in the same set of convictions: how many of such set of convictions resulted in a prison sentence. Therefore, for this variable, we should have the values ranging from 0 to a maximum of 1.
+
+```{r Checking the Probability of Prison Sentence}
+hist(x = crime$prbpris, breaks=20, main = "Probability of Prison Sentence Distribution", xlab = "Probability of Prison Sentence", ylab = "Frequency")
+summary(crime$prbpris)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+7. Average Sentence, days (avgsen): The average sentence time in days. This variable doesn't have a theoretical limit, it only shouldn't be negative. So we just need to be wary of outliers and understand if the values are actually true or some sort of measurement mistake.
+
+```{r Checking the Average Sentence}
+hist(x = crime$avgsen, breaks=20, main = "Average Sentence Distribution", xlab = "Average Sentence", ylab = "Frequency")
+summary(crime$avgsen)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+8. Police per Capita (polpc): The ratio of the number of police officers to the total population of the county. The values must be in the range from 0 (no cops in the county) to 1 (everyone in the county is a cop).
+
+```{r Checking the Police per Capita}
+hist(x = crime$polpc, breaks=20, main = "Police per Capita Distribution", xlab = "Police per Capita", ylab = "Frequency")
+summary(crime$polpc)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+9. Density (density): People per square mile. This variable should be above zero. Other than that, we should only take a deeper look at outliers.
+
+```{r Checking the Density}
+hist(x = crime$density, breaks=20, main = "Density Distribution", xlab = "Density", ylab = "Frequency")
+summary(crime$density)
+```
+
+There is a strangely small value for the minimum density, so we should take a deeper look:
+
+```{r Small Density Value}
+crime[crime$density<0.0001,]
+```
+Searching for the FIPS code of this county (173), we see that it is Swain County. That is clearly an arithmetic error, and the true density value is 0.02. So we must correct it
+
+```{r Correcting Swain County Density}
+
+crime$density[crime$density<0.0001]<- crime$density[crime$density<0.0001]*1000
+crime[crime$county==173,]
+```
+
+
+10.Tax Revenue per Capita (taxpc): This variable should be above zero. Other than that, we should only take a deeper look at outliers.
+
+```{r Checking Tax Revenue per Capita}
+hist(x = crime$taxpc, breaks=20, main = "Tax per Capita Distribution", xlab = "Tax per Capita", ylab = "Frequency")
+summary(crime$taxpc)
+```
+
+The observation in which tax per capita is almost 120 catches the eye, and so we should take a deeper look at that one.
+
+```{r Tax per capita almost 120}
+crime[crime$taxpc>100,]
+```
+
+The other variables seem to be ok, so, it is safe to keep these observation.
+
+11. West (west) / 12. Central (central) / 13. Urban (urban): Binary variables that indicate if the county is on West North Carolina, Central North Carolina or in SMSA. All of them should be either 0 or 1 for each observation.
+
+```{r Checking West, Central, Urban}
+hist(x=crime$west, main = "West", xlab= "West", ylab= "Frequency")
+hist(x=crime$central, main = "Central", xlab= "Central", ylab= "Frequency")
+hist(x=crime$urban, main = "Urban", xlab= "Urban", ylab= "Frequency")
+```
+
+The variables behave as we expected, and we can move on to analyzing other variables.
+
+14. Percent Minority, 1980 (pctmin80): Percentage of population within minority groups in the year of 1980. It should be between 0 and 1, because it represents the fraction of the population that is within minority groups
+
+```{r Checking Percent Minority}
+hist(x = crime$pctmin80, breaks=20, main = "Percent Minority Distribution", xlab = "Percent Minority", ylab = "Frequency")
+summary(crime$pctmin80)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+15. Weekly Wage, Contruction (wcon) / 16. Weekly Wage, Transportation, Utilities and Community (wtuc) / 17. Weekly Wage, Wholesale and Retail Trade (wtrd) / 18. Weekly Wage, Financial, Insurance and Real Estate (wfir) / 19. Weekly Wage, Service Industry (wser) / 20. Weekly Wage, Manufacturing (wmfg) / 21. Weekly Wage, Federal Employees (wfed) / 22. Weekly Wage, State Employees (wsta) / 23. Weekly Wage, Local Government Employees (wloc): All of these variables refer to the average weekly wage in different sectors of the economy. We should check for outliers, and if they do happen, investigate them more deeply.
+
+```{r Checking Wages}
+hist(x = crime$wcon, breaks=20, main = "Weekly Contruction Wage Distribution", xlab = "Weekly Contruction Wage", ylab = "Frequency")
+summary(crime$wcon)
+
+hist(x = crime$wtuc, breaks=20, main = "Weekly Transportation, Utilities and Community Wage Distribution", xlab = "Weekly Transportation, Utilities and Community Wage", ylab = "Frequency")
+summary(crime$wtuc)
+
+hist(x = crime$wtrd, breaks=20, main = "Weekly Wholesale and Retail Trade Wage Distribution", xlab = "Weekly Wholesale and Retail Trade Wage", ylab = "Frequency")
+summary(crime$wtrd)
+
+hist(x = crime$wfir, breaks=20, main = "Weekly Financial, Insurance and Real Estate Wage Distribution", xlab = "Weekly Financial, Insurance and Real Estate Wage", ylab = "Frequency")
+summary(crime$wfir)
+
+hist(x = crime$wser, breaks=20, main = "Weekly Service Industry Wage Distribution", xlab = "Weekly Service Industry Wage", ylab = "Frequency")
+summary(crime$wser)
+
+hist(x = crime$wmfg, breaks=20, main = "Weekly Manufacturing Wage Distribution", xlab = "Weekly Manufacturing Wage", ylab = "Frequency")
+summary(crime$wmfg)
+
+hist(x = crime$wfed, breaks=20, main = "Weekly Federal Employees Wage Distribution", xlab = "Weekly Federal Employees Wage", ylab = "Frequency")
+summary(crime$wfed)
+
+hist(x = crime$wsta, breaks=20, main = "Weekly State Employees Wage Distribution", xlab = "Weekly State Employees Wage", ylab = "Frequency")
+summary(crime$wsta)
+
+hist(x = crime$wloc, breaks=20, main = "Weekly Local Government Employees Wage Distribution", xlab = "Weekly Local Government Employees Wage", ylab = "Frequency")
+summary(crime$wloc)
+```
+
+For the service industry, there is one observation in particular that catches the eye, which is way above the second largest value. For that, we take a deeper look
+
+```{r Service Industry Investigation}
+crime[crime$wser>2000,]
+```
+
+It is county 185, Warren County. The only sector that has a weekly wage so much higher than for the other counties is the service industry, with all other sectors having a weekly wage very close to the state average. One might wonder if this county is particularly attractive for tourism, or some other sort of services, to explain such a difference. That is not the fact: Warren county is a center of tobacco and cotton plantations,educational later textile mills (https://en.wikipedia.org/wiki/Warren_County,_North_Carolina). It is very likely a dot was misplaced, and the actual value is 217.7068 instead of 2177.068. However, since we cannot atest that with certainty, we will leave the value as it is, and will not discard the observation.
+
+24. Offense mix, face-to-face / other (mix): Represents the ratio of criminal offenses made face-to-face (such as armed robbery) to other types. The values can range within any positive number, however, we should dig deeper in the case of outliers.
+
+```{r Checking Mix}
+hist(x = crime$mix, breaks=20, main = "Offense Mix Distribution", xlab = "Offense Mix", ylab = "Frequency")
+summary(crime$mix)
+```
+
+The variable behaves as we expected, and we can move on to analyzing other variables.
+
+25. Percent Young Male (pctymle): Represents the percent of the population composed by males between the age of 15 and 24. Should be a number between 0 and 1.
+
+```{r Checking Percent Young Male}
+hist(x = crime$pctymle, breaks=20, main = "Percent Young Male Distribution", xlab = "Percent Young Male", ylab = "Frequency")
+summary(crime$pctymle)
+```
+
+## Correlation of the Variables
+
+```{r correlation, fig.align = 'center'}
+
+crime.numeric     <- crime[, !names(crime) %in% c('county','year','west','central','urban')]
+crime.correlation <- round(cor(crime.numeric, use = 'pairwise.complete.obs'), 2 )
+#crime.ptest      <- cor.test(crime.numeric)$p
+
+corrplot(crime.correlation, diag = FALSE, order = 'FPC', type = "upper")
+```
+
+* The Population Density is strongly correlated with Crime Rate.
+* The Urban Counties are strongly correlated with Crime Rate.
+
+## Analysis of the Outcome Variable
+
+```{r transform}
+crime$crmrte.log_10k <- log(crime$crmrte) * 10000
+```
+
+```{r outcome, fig.align = 'center', warning = FALSE}
+pHist <- function(x)
+{
+    ggplot() + 
+        geom_histogram(aes(y=..density..,x=x), bins=20, fill="yellow", colour="black") +
+        geom_vline(xintercept=mean(x), linetype="dashed", size=1, colour="blue") +
+        stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1,
+                      args=list(mean=mean(x), sd=sd(x))) +
+        theme_economist()
+}
+
+p1 <- pHist(crime$crmrte)
+p2 <- pHist(crime$crmrte.log_10k)
+
+plot_grid(p1, p2)
+```
+
+<br/>Lorem ipsum dolor sit amet, vim eu assum noster verterem. Mei te dolor everti. Amet ferri vel eu. Vel liber postea officiis no.
+
+Eius nusquam ne eum, te sint dicat recusabo pro. Ad solet impetus temporibus pro, delectus lobortis cu eam, mollis voluptua no mei. Cum everti vivendum ea, id eros salutatus sit. Ne his admodum inciderint. Omnes iracundia intellegam eum an. Sit no natum delicata conclusionemque, in quot aliquando similique sed, unum persius ut sea.</br>
+
+## Correction of Anomalies
 
 We had to address the following anomalies in the dataset.
 
-+ The *Probability of Conviction* (prbconv) contains *1* observation(s) that are outside the acceptable range for a probability : [0,1]. We may also consider that this variable is mislabled and is indeed not a probability.
+* The *Probability of Conviction* (prbconv) contains *1* observation(s) that are outside the acceptable range for a probability : [0,1]. We may also consider that this variable is mislabled and is indeed not a probability.
 
-+ The *Probability of Arrests* (prbarr) contains *10* observation(s) that are outside the acceptable range for a probability : [0,1].
+* The *Probability of Arrests* (prbarr) contains *10* observation(s) that are outside the acceptable range for a probability : [0,1].
 
-+ The *1000 People per Square Mile* (density) contains an anamolous value of 0.0000203422 for Swain County (FIPS=173). According to the U.S. Census Bureau the 1987 population for this county was 10,932; and the total area is 541 sq. miles. Therefore the correct density was 20.207. Looks like there was an arithmatic error which we can easily resolved : 0.0203422.
+* The *1000 People per Square Mile* (density) contains an anamolous value of 0.0000203422 for Swain County (FIPS=173). According to the U.S. Census Bureau the 1987 population for this county was 10,932; and the total area is 541 sq. miles. Therefore the correct density was 20.207. Looks like there was an arithmatic error which we can easily resolved : 0.0203422.
 
 We could assume that the data used to calculate these probabalities were inconsistent and possibly not from the same year and or county which has produced this error. Unfortunately this weakens the verasity of these particular variables.
 
-## Transformations
-
-- Experiment with X transformations. Use higher R.Squared and lower MSE as a guide.
-- Y tranformations must be applied universally.
-
-# EDA (Model Building Process)
+# Model Building Process
 
 
 The outcome variable of our study is (crmrte) which is coded as 'crimes per person'.
-
 
 - What do you want to measure? Make sure you identify variables that will be relevant to the concerns of the political campaign.
 
@@ -161,11 +463,52 @@ The outcome variable of our study is (crmrte) which is coded as 'crimes per pers
 
 Higher Crime Rate Seems to Indicate Higher Police. I.E. the police presence was enhanced in crime ridden counties.
 
-
 # Regression Models
 
 ## Base Model
+
+Based on the variables selected, our base population model is:
+
+$$
+\begin{aligned}
+\textbf{log(Crime Rate)} & \sim \textbf{Probability of Arrest} \\
+           & + \textbf{Probability of Conviction} \\
+           & + \textbf{Probability of Prison} \\
+           & + \textbf{u}
+\end{aligned}
+$$
+
+```{r base}
+model.1 <- with(crime, lm(log(crmrte)~prbarr+prbconv+prbpris))
+coefs.1 <- coef(model.1)
+```
+
+<b>Model Coefficients</b>
+
+* $\beta_0$ : The **`r names(coefs.1[1])`** is `r round(coefs.1[1],3)`, which can not be interpreted in a meaningful way without considering the other coefficients.
+* $\beta_1$ : The **`r names(coefs.1[2])`** coefficient is `r round(coefs.1[2],3)`, which means we could preddict that for every 1% increase in Probability of Arrest that Crime Rate will go down by approximately 1.99%, while holding all other covariates and unobserved factors fixed.
+* $\beta_2$ : The **`r names(coefs.1[3])`** coefficient is `r round(coefs.1[3],3)`, which means we could preddict that for every 1% increase in Probability of Conviction that Crime Rate will go down by approximately 0.74%, while holding all other covariates and unobserved factors fixed.
+* $\beta_3$ : The **`r names(coefs.1[4])`** coefficient is `r round(coefs.1[4],3)`, which means we could preddict that for every 1% increase in Probability of Prision that Crime Rate will go **up** by approximately 0.34%, while holding all other covariates and unobserved factors fixed.
+
+<b>Goddness of Fit</b>
+
+<b>6 CLM Assumptions</b>
+
 ## Second Model
+
+$$
+\begin{aligned}
+\textbf{log(Crime Rate)} & \sim \textbf{Probability of Arrest} \\
+           & + \textbf{Probability of Conviction} \\
+           & + \textbf{Probability of Prison} \\
+           & + \textbf{u}
+\end{aligned}
+$$
+
+```{r second}
+model.2 <- with(crime, lm(log(crmrte)~prbarr+prbconv+prbpris))
+```
+
 ## Third Model
 ## Regression Table
 
@@ -183,43 +526,3 @@ Possible explanatory variables that are not available :
 - Does the conclusion address the high-level concerns of a political campaign?
 - Is the discussion connected to whether the key effects are real or whether they may be solely an artifact of omitted variable bias?
 
-
-```{r mychunk, echo = FALSE, fig.height=3, fig.width=5}
-
-library(knitr)
-# sample data
-dat <- data.frame(
-  text = sapply(1:10, FUN = function(x) { paste0(sample(x = LETTERS, size = 15), collapse = '') }), 
-  x1 = rnorm(10), 
-  x2 = rnorm(10, mean = 3), 
-  x3 = rnorm(10, mean = 5))
-
-# generate plots
-invisible(apply(dat[, 2:4], MARGIN = 1, FUN = boxplot))
-
-out <- cbind(row.names(dat), 
-             as.character(dat$text), 
-             sprintf('![](%s%s-%s.png)', opts_current$get('fig.path'), opts_current$get('label'), 1:nrow(dat)))
-kable(out, col.names = c('ID', 'Text', 'Boxplot'))
-```
-
-            X   Y~X  LY~X LY~LX
-[1] '  prbarr : 0.16 0.22 0.19'
-[1] ' prbconv : 0.15 0.20 0.14'
-[1] ' prbpris : 0.00 0.00 0.00'
-[1] '  avgsen : 0.00 0.00 0.00'
-[1] '   polpc : 0.03 0.00 0.08'
-[1] ' density : 0.53 0.40 0.24'
-[1] '   taxpc : 0.20 0.13 0.12'
-[1] 'pctmin80 : 0.03 0.05 0.16'
-[1] '    wcon : 0.15 0.16 0.16'
-[1] '    wtuc : 0.06 0.04 0.04'
-[1] '    wtrd : 0.18 0.16 0.15'
-[1] '    wfir : 0.11 0.09 0.08'
-[1] '    wser : 0.00 0.01 0.00'
-[1] '    wmfg : 0.12 0.09 0.13'
-[1] '    wfed : 0.24 0.27 0.25'
-[1] '    wsta : 0.04 0.03 0.02'
-[1] '    wloc : 0.13 0.08 0.09'
-[1] '     mix : 0.02 0.02 0.00'
-[1] ' pctymle : 0.08 0.08 0.10'

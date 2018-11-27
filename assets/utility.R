@@ -29,5 +29,5 @@ import <- function(package, devtools = F, version = NA)
         }
     }
 
-    library(package, character.only = T)
+    suppressWarnings(library(package, character.only = T))
 }
