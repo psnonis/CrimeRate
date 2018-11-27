@@ -17,7 +17,7 @@ text-align: justify}
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-source('assets/utility.R')
+source('../assets/utility.R')
 
 import('prettydoc')
 import('knitr')
@@ -86,7 +86,7 @@ dim(crime)
 ```
 
 ```{r crimemap, fig.align = 'center', warning = FALSE}
-source('assets/maps.R')
+source('../assets/maps.R')
 
 map('crmrte', 'Crime Rate per Capita')
 ```
@@ -162,14 +162,14 @@ summary(crime$density)
 ```
 
 ```{r Small Density Value}
-crime[crime$density<0.0001,]
+crime$county[crime$density<0.0001]
 ```
 Searching for the FIPS code of this county (173), we see that it is Swain County. When we search the data for Swain County in 1987 in the United States Census Bureau database, we see that the density was in fact 0.0202. That is clearly an arithmetic error, generating a value a 1000 times smaller. So, we correct it.
 
 ```{r Correcting Swain County Density}
 
 crime$density[crime$density<0.0001]<- crime$density[crime$density<0.0001]*1000
-crime[crime$county==173,]
+crime$density[crime$county==173]
 ```
 
 ### Other clear outliers
@@ -177,7 +177,7 @@ crime[crime$county==173,]
 For the service industry wages, there is one observation in particular that catches the eye, which is way above the second largest value. For that, we take a deeper look
 
 ```{r Service Industry Investigation}
-crime[crime$wser>2000,]
+crime$county[crime$wser>2000]
 ```
 
 It is county 185, Warren County. The only sector that has a weekly wage so much higher than for the other counties is the service industry, with all other sectors having a weekly wage very close to the state average. One might wonder if this county is particularly attractive for tourism, or some other sort of services, to explain such a difference. That is not the fact: Warren county is a center of tobacco and cotton plantations, and textile mills (https://en.wikipedia.org/wiki/Warren_County,_North_Carolina). It is very likely the value is multiplied by 10, and the actual value is 217.7068 instead of 2177.068. However, since we cannot atest that with certainty, we will leave the value as it is, and will not discard the observation.
