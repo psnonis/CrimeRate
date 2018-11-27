@@ -4,7 +4,7 @@ subtitle: 'MIDS W203, Fall 2018, Lab 3'
 author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
     prettydoc::html_pretty:
-        theme: architect
+        theme: HPSTR
         highlight: github
         toc: true
         number_sections: true
