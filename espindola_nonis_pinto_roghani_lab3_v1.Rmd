@@ -39,8 +39,6 @@ options(digit=3)
 
 # Introduction and Research Question
 
-<center>![Counties of North Carolina](assets/north_carolina.png)</center>
-
 The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign that has hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
 
 Our research focuses on the following specific question: <b>Can crime rates be reduced by a tougher criminal justice system?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system affects crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using Probability of Arrests, Probability of Conviction, and Probability of Prison.
@@ -60,11 +58,8 @@ We will primarily use these three explanatory variables as proxies to measure th
 The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the three explanatory variables Probability of Arrest, Probability of Conviction, and Probability of Prison. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
 
 + <b>Increasing arrest rates will decrease crime rate</b>
-<br/>Actionable through more technological and manpower resources allocated to law enforcement
 + <b>Increasing conviction rates will decrease crime rate</b>
-<br/>Actionable through stricter sentencing guidelines and more resources allocated to law enforcement agencies to collect higher quality evidence
 + <b>Increasing prison verdicts will decrease crime rate</b>
-<br/>Actionable through stricter sentencing guidelines for courts
 
 Our recommendations will be based on sound statistically significant and practically significant results. We hope to reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables. (causal vs associative ..?)
 
@@ -90,6 +85,7 @@ dim(crime)
 
 ```{r crimemap, fig.align = 'center', warning = FALSE}
 source('assets/maps.R')
+
 map('crmrte', 'Crime Rate per Capita')
 ```
 From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map above shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects.
