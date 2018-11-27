@@ -15,7 +15,7 @@ ncmap <- left_join(ncmap, crime, by = 'county') # append crime data
 map <- function(column, title)
 {
     ggplot(data = ncmap, mapping = aes_string(x = 'long', y = 'lat', group = 'group', fill = column)) +
-        geom_polygon(color = 'black', size = 0.05) + theme_wsj() +
+        geom_polygon(color = 'black', size = 0.025) + theme_wsj() +
         coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
         theme(legend.position = 'bottom',
               text = element_text(size = 12, family = 'sans'),
