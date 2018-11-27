@@ -37,7 +37,7 @@ options(digit = 2, warn = -1)
 
 # Introduction and Research Question
 
-The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms, of the political campaign that has hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
+The primary motivation of this report is to provide causal estimates for determinants of crime in the state of North Carolina. The main aim of our study is to shape the public policy platforms of the political campaign that has hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
 
 Our research focuses on the following specific question: <b>Can crime rates be reduced by a tougher criminal justice system?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system affects crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using Probability of Arrests, Probability of Conviction, and Probability of Prison.
 
@@ -49,23 +49,23 @@ $$
 \end{aligned}
 $$
 
-We will primarily use these three explanatory variables as proxies to measure the effects of the the criminal justice system on crime; and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and will further explore their impact in our extended second OLS model.
+We will primarily use these three explanatory variables as proxies to measure the effects of the the criminal justice system on crime and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and thus, will further explore their impact in our extended second OLS model.
 
 ## Policy Hypothesis
 
-The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the three explanatory variables Probability of Arrest, Probability of Conviction, and Probability of Prison. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
+The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the three explanatory variables, Probability of Arrest, Probability of Conviction, and Probability of Prison. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
 
 + <b>Increasing arrest rates will decrease crime rate</b>
 + <b>Increasing conviction rates will decrease crime rate</b>
 + <b>Increasing prison verdicts will decrease crime rate</b>
 
-Our recommendations will be based on sound statistically significant and practically significant results. We hope to reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables. (causal vs associative ..?)
+Our recommendations will be based on sound statistically significant and practically significant results. We hope to reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables. 
 
 # Data Loading and Cleaning
 
 The primary data source for our study is **Cornwell and W. Trumball (1994), Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366**. We will use a single cross-section of data for **1987** from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
 
-The dataset is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980. (Talk about additional datasets we used and why here?)
+The dataset is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980.
 
 ## Basic Sanity Checks
 
@@ -161,7 +161,7 @@ The study of the research question requires some exploratory data analysis to ch
 
 ## Selection of the Outcome Variable
 
-Crime rate is our dependent variable; therefore, we need to conduct additional exploratory data analysis on this variable, in addition to steps taken in our general EDA above.  
+Crime rate is our dependent variable; therefore, we need to conduct additional exploratory data analysis on this variable, besides the steps taken in our general EDA above.  
 
 In our initial exploration, we noticed that the crime rate histogram showed a positively skewed distribution. A log transformation of the variable pulls the outlying data points closer to the bulk of the observations, resulting in a normal distribution.
 
@@ -172,13 +172,13 @@ p2 <- pHist(log(crime$crmrte), breaks = 20, label = "Crime Rate (log)")
 plot_grid(p1, p2)
 ```
 
-More importantly, the log transformation will allow us to interpret changes in the dependent variable as percentages, which is a more meaningful way to describe such changes in this context. Counties have different crime rates and percentage changes in crime will enable county-to-county comparison. Because of this a log transformation was selected to be performed on this variable. 
+More importantly, the log transformation will allow us to interpret changes in the dependent variable as percentages, which is a more meaningful way to describe such changes in this context. Counties have different crime rates and percentage changes in crime will enable county-to-county comparison. As such, we implemented a log transformation on this variable. 
 
 ```{r outcome_trans}
 crime$crmrte.log <- log(crime$crmrte) # log transformation
 ```
 
-Furthermore, there was an extreme outlier on the left tail of the data, but we decided to keep that as we don’t have a strong reason for removing it.
+There is an extreme outlier on the left tail of the data, but we decided to keep that as we don’t have a strong reason for removing it.
 
 ## Explanatory Variables, Base Model
 
@@ -492,6 +492,8 @@ In addition to what we concluded for the previous models specifications, we coul
 stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
           keep.stat = c("rsq", "n"), omit.table.layout = "n")
 ```
+
+*[placeholder: include commentary on practical significance of coefficients in the final report, once we've received peer feedback]*
 
 # Omitted Variables Analysis
 
