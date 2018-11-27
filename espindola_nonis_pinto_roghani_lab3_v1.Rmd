@@ -437,18 +437,20 @@ $$
 $$
 
 ```{r m2}
-m2 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + polpc.log + avgsen.log, data = crime)
-m2
+m2 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log, data = crime)
+m2$coefficients
 ```
 
 ### Coefficients
 
-- $\beta_0$ : `intercept` is 1.56065, which can not be interpreted in a meaningful way without considering other coefficients
-- $\beta_1$ : `prbarr` coefficient is -2.3465, which means we could predict that for every 0.01 increase in probability of arrest, crime rate will go down by approximately 2.35%, while holding all other covariates and unobserved factors fixed
-- $\beta_2$ : `prbconv` coefficient is -0.7346, which means we could predict that for every 0.01 increase in probability of conviction, crime rate will go down by approximately 0.73%, while holding all other covariates and unobserved factors fixed
-- $\beta_3$ : `prbpris` coefficient is 0.3066, which means that every 0.01 increase in probability of prison is associated with a 0.39% increase in crime rate, while holding all other covariates and unobserved factors fixed
-- $\beta_4$ : `polpc.log` coefficient is 0.6171, which means that every 1% increase in police per capita is associated with about 0.62% increase in crime rate, while holding all other covariates and unobserved factors fixed
-- $\beta_5$ : `avgsen.log` coefficient is -0.0650, which means we could predict that for every 1% increase in avg. prison sentence, crime rate will go down by approximately 0.065%, while holding all other covariates and unobserved factors fixed
+While holding all other covariates and ubobserved factors fixed:
+
+- $\beta_0$ : `intercept`  is `r coef(m2)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients
+- $\beta_1$ : `prbarr`     is `r coef(m2)[2]`, which means we could predict that for every 0.01 increase in probability of arrest, crime rate will go down by approximately 2.35%
+- $\beta_2$ : `prbconv`    is `r coef(m2)[3]`, which means we could predict that for every 0.01 increase in probability of conviction, crime rate will go down by approximately 0.73%
+- $\beta_3$ : `prbpris`    is `r coef(m2)[4]`, which means that every 0.01 increase in probability of prison is associated with a 0.39% increase in crime rate
+- $\beta_4$ : `polpc.log`  is `r coef(m2)[5]`, which means that every 1% increase in police per capita is associated with a 0.62% increase in crime rate
+- $\beta_5$ : `avgsen.log` is `r coef(m2)[6]`, which means we could predict that for every 1% increase in avg. prison sentence, crime rate will go down by approximately 0.065%
 
 ### Goodness of Fit
 
@@ -527,6 +529,8 @@ As in the base model, the probability of prison has a positive coefficient in ou
 
 ## Kitchen-sink Model
 
+For the third model, we are adding to the second model the rest of  the variables in the dataset as predictors, with the exception of year and county.  With this approach we are not following a criteria for inclusion of a variable in the model (i.e. is the variable relevant or not in the context of our research question, does it have a confounding effect or not with the variables in the previous models) and we do not expect to obtain the most parsimonious model that describes our data.  This third model would probably be an overfitting model.
+
 $$
 \begin{aligned}
 \textbf{log(Crime Rate)} & \sim \textbf{Everything} \\
@@ -535,6 +539,10 @@ $$
 $$
 
 ```{r m3}
+m3 = lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log+
+        density+taxpc+west+central+urban+pctmin80+wcon+wtuc+
+        wtrd+wfir+wser+wmfg+wfed+wsta+wloc+log(mix)+pctymle, data = crime)
+
 m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + polpc.log + avgsen.log + 
                  taxpc + density + west + central + urban + pctmin80 + wcon +
                  wtuc + wtrd + wfir + wser + wmfg + wfed + wsta + wloc +
