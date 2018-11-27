@@ -1,0 +1,161 @@
+---
+title: 'Reducing Crime'
+subtitle: 'MIDS W203, Fall 2018, Lab 3'
+author: 'Eduarda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
+output:
+    prettydoc::html_pretty:
+        theme: architect
+        highlight: github
+        toc: true
+        number_sections: true
+---
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+source('../assets/utility.R')
+
+import('prettydoc')
+import('knitr')
+import('kableExtra')
+import('tidyverse')
+import('RColorBrewer')
+import('ggthemes')
+import('stargazer')
+import('lmtest')
+import('maps')
+import('summarytools')
+import('formattable')
+import('sparkline')
+import('cowplot')
+import('corrplot')
+
+options(digit=3)
+```
+
+# Omitted Variables Analysis
+
+We have proposed to model the logarithm of the crime rate ($log(crmrte)$) as a linear combination of the probability of arrest $prbarr$, the probability of conviction ($prbconv$), and the probability of prison ($prbpris$). However, we understand that other variables might impact the crime rate:
+- Percent of population with registered guns ($guns$);
+- Average years of education ($avgeduc$);
+- Unemployment rates ($unmprt$);
+- Percent of the population below the poverty line ($pctpov$)
+
+So we assume the real model would be:
+$$
+log(crmrte) = \beta_0 + \beta_1 \cdot prbarr + \beta_2 \cdot prbconv + \beta_3 \cdot prbpris + \beta_4 \cdot guns + \beta_5 \cdot avgeduc + \beta_6 \cdot unmprt + \beta_7 \cdot pvtpov + u
+$$
+
+But the sample model is:
+
+$$
+log(crmrte) = \alpha_0 + \alpha_1 \cdot prbarr + \alpha_2 \cdot prbconv + \alpha_3 \cdot prbpris + w
+$$
+
+To assess the direction of the bias, we will do an analysis for each omitted variable.
+
+## Percent of population with registered guns (guns)
+
+North Carolina has no law that requires the comprehensive registration of firearms throughout the state. However, the sheriff of each county must keep a record of all permits to purchase a handgun, including the name, date, place of residence, and age of each person to whom a permit is issued. We could reach out for this information for a more accurate representation, however, we will now focus on assessing the bias of this variable. First, we will write the $guns$ variable as a linear combination of the variables we do have the data for:
+
+$$
+guns = \gamma_0 +\gamma_1 \cdot prbarr + \gamma_2 \cdot prbconv + \gamma_3 \cdot prbpris +v
+$$
+
+$\gamma_0$ represents the intercept. The other $\gamma_n$ will be the slope coefficient for each of the model variables. We can make some assumptions:
+
+$\beta_4$ (the slope for the guns variable for crime rate) has a positive value: percent of people with registered guns will have a positive correlation with the crime rate (accidental gunshots, bad reactions in traffic, wrongly assuming risk)
+
+$\gamma_1$ has a positive value: probability of arrest will have a positive correlation with the percentage of people with registered guns (it is easier to catch crimes commited with registered guns)
+
+$\gamma_2$ has a positive value: probability of conviction will have a positive correlation with the percentage of people with registered guns (it is easier to convict with more evidence - registered gun)
+
+$\gamma_3$ has a positive value: probability of prison will have a positive correlation with the percentage of people with registered guns (it is more likely to issue a sentence with prison time for crimes commited with a gun)
+
+$\beta_4$ is positive, and so are $\gamma_1$, $\gamma_2$ and $\gamma_3$. So the ommited variable percent of population with registered guns bias will be positive for $prbarr$, $prbconv$ and $prbpris$.That means that:
+
+$$
+\alpha_1 > \beta_1 \\
+\alpha_2 > \beta_2 \\
+\alpha_3 > \beta_3 \\
+$$
+
+## Average years of education (avgeduc)
+
+That information can be obtained in census databases. For assessing the bias this variable has on the available ones, we must write $avgeduc$ as a linear combination of the variables we do have the data for:
+
+$$
+avgeduc = \gamma_0 +\gamma_1 \cdot prbarr + \gamma_2 \cdot prbconv + \gamma_3 \cdot prbpris +v
+$$
+
+$\gamma_0$ represents the intercept. The other $\gamma_n$ will be the slope coefficient for each of the model variables. We can make some assumptions:
+
+$\beta_5$ (the slope for the avgeduc variable for crime rate) has a negative value: average years of education will have a negative correlation with the crime rate (more education leads to more tolerance and better understanding of the laws)
+
+$\gamma_1$ has a positive value: probability of arrest will have a negative correlation with the average years of education (more educated people will take some extra precaution about getting caught)
+
+$\gamma_2$ has a close to zero value: probability of conviction will have very low correlation with the average years of education (the conviction is related to the nature and the evidences for each crime, not the person commiting it, in a ideal world)
+
+$\gamma_3$ has a close to zero value: probability of prison will have very low correlation with the average years of education (in a ideal world, the issuing of a sentence should be only related to the nature of the crime commited)
+
+$\beta_5$ is negative, and so is $\gamma_1$, however, $\gamma_2$ and $\gamma_3$ are very close to zero. So the ommited variable average years of education bias will be positive for $prbarr$. That means that:
+
+$$
+\alpha_1 > \beta_1 \\
+$$
+
+## Unemployment rates (unmprt)
+
+That information can be obtained in census databases. For assessing the bias this variable has on the available ones, we must write $unmprt$ as a linear combination of the variables we do have the data for:
+
+$$
+unmprt = \gamma_0 +\gamma_1 \cdot prbarr + \gamma_2 \cdot prbconv + \gamma_3 \cdot prbpris +v
+$$
+
+$\gamma_0$ represents the intercept. The other $\gamma_n$ will be the slope coefficient for each of the model variables. We can make some assumptions:
+
+$\beta_6$ (the slope for the umnprt variable for crime rate) has a positive value: unemployment rate will have a positive correlation with the crime rate (unemployment might lead to people seeking illegal forms of income)
+
+$\gamma_1$ has a close to zero value: probability of arrest will have very low correlation with the unemployment rates (the arrest is related to the evidences available for the police to catch the criminal - in an ideal world)
+
+$\gamma_2$ has a close to zero value: probability of conviction will have very low correlation with the unemployment rates (the conviction is related to the nature and the evidences for each crime, not the person commiting it, in a ideal world)
+
+$\gamma_3$ has a positive value: probability of prison will have positive correlation with the unemployment rates (in a ideal world, the issuing of a sentence should be only related to the nature of the crime commited, however some judges might consider that an unemployed person is more likely to commit a crime again, as means of income, and would be more prone to issuing a sentence with prison time)
+
+$\beta_6$ is positive, and so is $\gamma_3$, however, $\gamma_1$ and $\gamma_2$ are very close to zero. So the ommited variable unemployment rates bias will be positive for $prbconv$. That means that:
+
+$$
+\alpha_3 > \beta_3 \\
+$$
+## Percent of the population below the poverty line (pctpov)
+
+That information can be obtained in census databases. For assessing the bias this variable has on the available ones, we must write $pctpov$ as a linear combination of the variables we do have the data for:
+
+$$
+pctpov = \gamma_0 +\gamma_1 \cdot prbarr + \gamma_2 \cdot prbconv + \gamma_3 \cdot prbpris +v
+$$
+
+$\gamma_0$ represents the intercept. The other $\gamma_n$ will be the slope coefficient for each of the model variables. We can make some assumptions:
+
+$\beta_7$ (the slope for the pctpov variable for crime rate) has a positive value: the percentage of population below the poverty line will have a positive correlation with the crime rate (poverty might lead to people seeking illegal forms of income)
+
+$\gamma_1$ has a close to zero value: probability of arrest will have very low correlation with the percentage of population below the poverty line (the arrest is related to the evidences available for the police to catch the criminal - in an ideal world)
+
+$\gamma_2$ has a close to zero value: probability of conviction will have very low correlation with the percentage of population below the poverty line (the conviction is related to the nature and the evidences for each crime, not the person commiting it, in a ideal world)
+
+$\gamma_3$ has a positive value: probability of prison will have positive correlation with the percentage of population below the poverty line (in a ideal world, the issuing of a sentence should be only related to the nature of the crime commited, however some judges might consider that a very poor person is more likely to commit a crime again, as means of income, and would be more prone to issuing a sentence with prison time)
+
+$\beta_7$ is positive, and so is $\gamma_3$, however, $\gamma_1$ and $\gamma_2$ are very close to zero. So the ommited variable unemployment rates bias will be positive for $prbconv$. That means that:
+
+$$
+\alpha_3 > \beta_3 \\
+$$
+
+
+## Omitted Variable Bias Conclusion
+
+By the analysis we have made, the ommited variables impose a positive bias in all the coefficients for the present variables, meaning our model is actually superestimating the correlation between each independent variable and our dependent variable
