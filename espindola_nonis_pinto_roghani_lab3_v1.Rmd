@@ -486,6 +486,13 @@ autoplot(m3) + theme_economist()
 
 In addition to what we concluded for the previous models specifications, we could advise the political campaign, that given that an increase in density and in percent of young male potentially predict an increase in crime rate (see coefficients above), they should explore the possibility of defining outreach program specifically designed for this demographic group in urban settings.  In addition the campaign should not base their strategy for the outreach programs on percent of minorities in the counties.
 
+## Regression Table
+
+```{r regression, results = "asis"}
+stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
+          keep.stat = c("rsq", "n"), omit.table.layout = "n")
+```
+
 # Omitted Variables Analysis
 
 We have proposed to model the logarithm of the crime rate `log(crmrte)` as a linear combination of the probability of arrest `prbarr`, the probability of conviction `prbconv`, and the probability of prison `prbpris`.
@@ -613,13 +620,6 @@ $$
 ## Bias Conclusion
 
 By the analysis we have made, the ommited variables impose a positive bias in all the coefficients for the present variables, meaning our model is actually superestimating the correlation between each independent variable and our dependent variable
-
-# Regression Table
-
-```{r regression, results = "asis"}
-stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
-          keep.stat = c("rsq", "n"), omit.table.layout = "n")
-```
 
 # Conclusion
 
