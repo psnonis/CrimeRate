@@ -479,7 +479,7 @@ m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log + mix.
 
 * The R-squared value is <b>`r summary(m3)$r.squared`</b>, which means around 86% of the variation in crime rate could be explained by our third model. Even though this is a higher number compared to our previous models, it doesn’t necessarily show a better fit because as we add variables R-squared goes up anyway.
 * The adjusted R-squared value is <b>`r summary(m3)$adj.r.squared`</b> (compared to an adjusted R-squared value of 0.59 for the second model). When comparing two models used to predict the same response variable, we generally prefer the model with the higher value of adjusted R2, however, we do not know if another specification model with less variables than the third model could have a higher adjusted R2.
-* Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m1)`. The third model is more accurate according to this test but it is probably not the most parsimonious model.
+* Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m2)`. The third model is more accurate according to this test but it is probably not the most parsimonious model.
 
 ### 6 CLM Assumptions - M3
 
