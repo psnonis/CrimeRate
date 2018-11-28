@@ -39,7 +39,8 @@ pHist <- function(x, breaks, label)
         stat_function(aes(x=x), fun = dnorm, colour = "red", size = 1,
                       args=list(mean=mean(x), sd=sd(x))) +
         xlab(label) +
-        theme_economist()
+        theme_economist() +
+        scale_colour_economist()
 }
 
 mSetup <- function()
@@ -93,4 +94,5 @@ sTable <- function(tab){
                               sapply(z, function(zz){
                                   knit(text = sprintf("`r sparkline(c(%s), type='bar')`",
                                                       paste0(zz, collapse = ",")), quiet = T)})}
-    ))}
+    ))
+}
