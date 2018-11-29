@@ -4,7 +4,7 @@ subtitle: 'MIDS W203, Fall 2018, Lab 3'
 author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
   html_document:
-    theme: united
+    theme: simplex
     highlight: tango
     toc: true
     toc_float: true
@@ -16,9 +16,15 @@ output:
     {
         text-align: justify
     }
+    .table > tbody > tr > td
+    {
+        color: black;
+        font-family: consolas;
+    }
     .table > tbody > tr:nth-child(odd) > td
     {
         background-color: #ffccbc;
+        color: black;
     }
     th
     {
@@ -32,7 +38,7 @@ output:
     }
 </style>
 
-```{r appendix}
+```{r include}
 source('appendix.R')
 ```
 
@@ -106,7 +112,7 @@ dim(crime)
 
 From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects.
 
-```{r crime_map, fig.height = 4.5, fig.align = 'center', warning = FALSE}
+```{r crime_map, warning = FALSE, fig.align = 'center', fig.width = 9}
 mSetup(); mMapNC('crmrte', 'Crime Rate per Capita')
 ```
 
@@ -129,7 +135,7 @@ sTable(crime.summary[c(1,2),]) # Identification
 
 + <b>Crime & Law Enforcement</b>
 ```{r var_2, results="asis"}
-sTable(crime.summary[c(3,4,5,6,7,8,25),]) # Crime & Law Enforcement
+sTable(crime.summary[c(3,4,5,6,7,8),]) # Crime & Law Enforcement
 ```
 + <b>Demographics & Geography</b>
 ```{r var_3, results="asis"}
@@ -187,7 +193,7 @@ Crime rate is our dependent variable; therefore, we need to conduct additional e
 
 In our initial exploration, we noticed that the crime rate histogram showed a positively skewed distribution. A log transformation of the variable pulls the outlying data points closer to the bulk of the observations, resulting in a normal distribution.
 
-```{r outcome_plot, fig.align = 'center', warning = FALSE}
+```{r outcome_plot, warning = FALSE, fig.align = 'center', fig.width = 9}
 p1 <- pHist(    crime$crmrte , breaks = 20, label = "Crime Rate"      )
 p2 <- pHist(log(crime$crmrte), breaks = 20, label = "Crime Rate (log)")
 
@@ -214,7 +220,7 @@ Looking at the summary statistics of the 3 variables, we don’t see any alarmin
 
 County 115 consistently shows up in the histograms of crime rate, prbarr and prbconv as an extreme outlier. It has a low density (below first quartile), which could be the reason for the unusual values  in our variables of interest.
 
-```{r m1_explanatory_plot, fig.align = 'center', warning = FALSE}
+```{r m1_explanatory_plot, warning = FALSE, fig.align = 'center', fig.width = 9}
 p1 <- pHist(crime$prbarr,  breaks = 40, label = "Probability of Arrest"    )
 p2 <- pHist(crime$prbconv, breaks = 40, label = "Probability of Conviction")
 p3 <- pHist(crime$prbpris, breaks = 40, label = "Probability of Prison"    )
@@ -225,8 +231,8 @@ plot_grid(p1, p2, p3) # TODO : make three columns
 Next, we looked at the scatterplots of dependent and explanatory variables for our base model. `prbarr`  seems to have a pretty linear relationship with `crmrte.log`. The same with `prbconv`, although we see a curvature towards the right side of the chart. 
 `prbpris` does not seem to have a linear relationship with `crmrte.log`, based on the scatterplot; it looks more like a quadratic relationship. However, we decided to leave `prbpris` as is, because a quadratic transformation would make the interpretation of our model unnecessarily complicated. 
 
-```{r m1_correlation, fig.align = "center", warnings = FALSE}
-ggscatmat(crime, columns = c(26,4,5,6)) + geom_smooth(method = "lm") + theme_economist()
+```{r m1_correlation, warnings = FALSE, fig.align = "center", fig.width = 9}
+pScatterMatrix(crime, columns = c(26,4,5,6))
 ```
 
 ## Explanatory Variables, Extended Model
@@ -241,7 +247,7 @@ Having seen positive skewness in the distributions of both `avgsen` and `polpc` 
 
 The outiler observed in these histograms are values from county 115. The low density of county 115 could explain why it is an outlier, the average sentence variable could be  very sensitive to violent crimes in a low density county.
 
-```{r m2_explanatory_plot, fig.align = "center", warnings = FALSE}
+```{r m2_explanatory_plot, warnings = FALSE,  fig.align = "center", fig.width = 9}
 p1 <- pHist(    crime$polpc  , breaks = 20, label = "Police per Capita"         )
 p2 <- pHist(log(crime$polpc) , breaks = 20, label = "Police per Capita (log)"   )
 p3 <- pHist(    crime$avgsen , breaks = 20, label = "Avg. Prison Sentence"      )
@@ -257,8 +263,8 @@ crime$polpc.log  <- log(crime$polpc ) # log transformation
 
 Looking at the scatterplots of dependent and the additional explanatory variables for our second model. None of the additional variables seem to have a perfect linear relationship with the independet variable. But since we have already implemented a log transformation and seen improvment in variable distributions, we will not take additional steps to modify our variables and use them in their current state.
 
-```{r m2_correlation, fig.align = "center", warnings = FALSE}
-ggscatmat(crime, columns = c(26,27,28)) + geom_smooth(method = "lm") + theme_economist()
+```{r m2_correlation, warnings = FALSE, fig.align = "center", fig.width = 9}
+pScatterMatrix(crime, columns = c(26,27,28))
 ```
 
 ## Explanatory Variables, Kitchen-sink Model
@@ -267,7 +273,7 @@ Finally, we are adding almost other variables (except for `county` and `year`) t
 
 The only additional step we took for Model 3, was evaluation of variable `mix` due to the positive skewness that we observed in its distribution. Here we are comparing the distribution of `mix` before and after log transformation, and since the distribution post log transformation looks fairly normal, we decided to use it in our Model 3.
 
-```{r m3_explnatory_plot, fig.align = "center", warnings = FALSE}
+```{r m3_explnatory_plot, warnings = FALSE, fig.align = "center", fig.width = 9}
 p1 <- pHist(    crime$mix , breaks = 20, label = "Offense Mix"      )
 p2 <- pHist(log(crime$mix), breaks = 20, label = "Offense Mix (log)")
 
@@ -326,7 +332,7 @@ It is worth noting that the coefficients for `prbarr` and `prbconv` amplify the 
 
 ### Model Diagnostics - M1
 
-```{r m1_residuals, fig.align = 'center'}
+```{r m1_residuals, fig.align = 'center', fig.width = 9}
 pHist(m1$residuals, breaks = 20, label = "Residuals")
 ```
 
@@ -334,8 +340,8 @@ pHist(m1$residuals, breaks = 20, label = "Residuals")
 </br>
 The histogram of residuals show a fairly normal distribution where the bulk of the data points are (except for a few spikes that don’t look totally abnormal). However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution. 
 
-```{r m1_diagnostics, fig.align = 'center'}
-autoplot(m1) + theme_economist()
+```{r m1_diagnostics, fig.align = 'center', fig.width = 9}
+pModel(m1, title = "Model 1 Diagnostic Plots")
 ```
 
 <b>Residual vs Fitted</b>
@@ -413,7 +419,7 @@ While holding all other covariates and ubobserved factors fixed:
 
 ### Model Diagnostics - M2
 
-```{r m2_residuals, fig.align = 'center'}
+```{r m2_residuals, fig.align = 'center', fig.width = 9}
 pHist(m2$residuals, breaks = 20, label = "Residuals")
 ```
 
@@ -421,8 +427,8 @@ pHist(m2$residuals, breaks = 20, label = "Residuals")
 </br>
 The histogram of residuals show a fairly normal distribution (especially compared with the same plot for base model) where the bulk of the data points are. However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution. 
 
-```{r m2_diagnostics, fig.align = 'center'}
-autoplot(m2) + theme_economist()
+```{r m2_diagnostics, fig.align = 'center', fig.width = 9}
+pModel(m2, title = "Model 2 Diagnostic Plots")
 ```
 
 <b>Residual vs Fitted</b>
@@ -492,7 +498,7 @@ Zero conditional mean: We will cover that in the next phase of the project
 
 ### Model Diagnostics - M3
 
-```{r m3_residuals, fig.align = 'center'}
+```{r m3_residuals, fig.align = 'center', fig.width = 9}
 pHist(m3$residuals, breaks = 20, label = "Residuals")
 ```
 
@@ -500,8 +506,8 @@ pHist(m3$residuals, breaks = 20, label = "Residuals")
 <br/>
 The histogram of residuals show a fairly normal distribution.  However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution.
 
-```{r m3_diaggnostics, fig.align = 'center'}
-autoplot(m3) + theme_economist()
+```{r m3_diaggnostics, fig.align = 'center', fig.width = 9}
+pModel(m3, title = "Model 3 Diagnostic Plots")
 ```
 
 ### Interpretation and Conclusion - M3
@@ -512,7 +518,8 @@ In addition to what we concluded for the previous models specifications, we coul
 
 ```{r regression, results = "asis"}
 stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
-          keep.stat = c("rsq", "n"), omit.table.layout = "n")
+          keep.stat = c("rsq", "n"), omit.table.layout = "n",
+          dep.var.labels = c("Crime Rate per Capita"), ci = T)
 ```
 
 <br/>
@@ -583,4 +590,9 @@ By the analysis we have made, the ommited variables impose a positive bias in al
 
 * The data set does not discriminate among crime types.  We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft).  This could lead to more interesting findings on the specific effects of the predictor variables per type of crime.  
 * The data set only includes data for the year 1987.  We think that this sample could be biased.  We would need to expand this research with more years.
-* Adding data on specific percent of young male risk groups, such as school dropouts, teenager parenting, young male substance abuse, could provide more actionable insights to design specific outreach programs. 
+* Adding data on specific percent of young male risk groups, such as school dropouts, teenager parenting, young male substance abuse, could provide more actionable insights to design specific outreach programs.
+
+# Appendix
+
+```{r appendix, code = readLines('appendix.R')}
+```
