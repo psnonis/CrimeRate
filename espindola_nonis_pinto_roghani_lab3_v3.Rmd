@@ -16,7 +16,7 @@ output:
     {
         text-align: justify
     }
-    .table > tbody > tr > td
+    table > tbody > tr > td
     {
         color: black;
         font-family: consolas;
@@ -345,27 +345,27 @@ pModel(m1, title = "Model 1 Diagnostic Plots")
 ```
 
 <b>Residual vs Fitted</b>
-<br/>
+<br>
 The residual vs fitted spline shows curvatures, deviating from zero, both on the left and the right side. The one on the left is the result of extreme outlier that we observed before. The curvature on the right side, as the `crmrte.log` increases, might be because we don’t have enough data points. Either way, this chart doesn’t provide the confidence to verify the zero mean condition assumption.
 
 <b>Normal Q-Q</b>
-<br/>
+<br>
 Most points are on, or fairly close to the diagonal line, based on which we can tell that the residuals are distributed normally. However, we see a little bit of deviation towards the two ends of the line. Thus, we will take additional steps to verify this assumption. 
 
 <b>Scale-Location</b>
-<br/>
+<br>
 Despite the fact that points on chart seem to spread out as we move to the right, there is not strong sign of heteroskedasticity, since we have very few points on the left side.
 
 <b>Residuals vs Leverage</b>
-<br/>
+<br>
 As suspected, the residual from observation row 51 (county 115), has a high influence on our model, with a Cook’s distance of about 1
 
 <b>Breusch-Pagan Test</b>
-<br/>
+<br>
 In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m1)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
 
 <b>Shapiro-Wilk Test</b>
-<br/>
+<br>
 In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m1$residuals)$p.value`</b> is greater than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can not be rejected. In other words the residuals in our model are normally distributed.
 
 ### Interpretation and Conclusion - M1
@@ -432,27 +432,27 @@ pModel(m2, title = "Model 2 Diagnostic Plots")
 ```
 
 <b>Residual vs Fitted</b>
-<br/>
+<br>
 The residual vs fitted spline is much flatter than that of base model. However, it shows a curvature with positive slope on the right side, deviating from zero. This might be due to the fact that we don’t have enough data points.
 
 <b>Normal Q-Q</b>
-<br/>
+<br>
 Most points are on, or fairly close to the diagonal line. However, as in base model, we see some deviations towards the two extremes of the line. Thus, we will take additional steps to verify this assumption. 
 
 <b>Scale-Location</b>
-<br/>
+<br>
 Despite the fact that points on chart seem to spread out as we move to the right, there is not strong sign of heteroskedasticity, since we have very few points on the left side.
 
 <b>Residuals vs Leverage</b>
-<br/>
+<br>
 As in the base model, the residual from observation row 51 (county 115), has a high influence on our model. But in model 2, its Cook’s distance is much lower than what we saw in the base model.
 
 <b>Breusch-Pagan Test</b>
-<br/>
+<br>
 In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m2)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
 
 <b>Shapiro-Wilk Test</b>
-<br/>
+<br>
 In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m2$residuals)$p.value`</b> is smaller than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can be rejected. That said, given the sample size of >30 we can assume that the sampling distribution of our coefficients is normal, so assumption 6 (normality) still holds in our model.
 
 ### Interpretation and Conclusion - M2
@@ -503,7 +503,7 @@ pHist(m3$residuals, breaks = 20, label = "Residuals")
 ```
 
 <b>Residuals Plot</b>
-<br/>
+<br>
 The histogram of residuals show a fairly normal distribution.  However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution.
 
 ```{r m3_diaggnostics, fig.align = 'center', fig.width = 9}
@@ -518,19 +518,20 @@ In addition to what we concluded for the previous models specifications, we coul
 
 ```{r regression, results = "asis"}
 stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
+          column.labels = c("Base", "Extended", "Kitchen-sink"),
           keep.stat = c("rsq", "n"), omit.table.layout = "n",
           dep.var.labels = c("Crime Rate per Capita"), ci = T)
 ```
 
-<br/>
+<br>
 <b>[placeholder: include commentary on practical significance of coefficients in the final report, once we've received peer feedback]</b>
 
 # Omitted Variables Analysis
 
 We have proposed to model the logarithm of the crime rate `log(crmrte)` as a linear combination of the probability of arrest `prbarr`, the probability of conviction `prbconv`, and the probability of prison `prbpris`.
-<br/>
+<br>
 
-However, other variables might impact the Crime Rate<br/>
+However, other variables might impact the Crime Rate<br>
 
 * Percent of Population with Registered Guns `guns`
 * Average Years of Education `avgeduc`
@@ -573,7 +574,7 @@ By the analysis we have made, the ommited variables impose a positive bias in al
 # Conclusion
 
 <b>We suggest the following</b>
-<br/>
+<br>
 
 * The political campaign should design policies aimed to increase probability of arrest and probability of conviction.  Actionable insights could include:
     + Invest in the police force modernization. The inclusion of cameras in public sites, for example, would increase the probability of arrest and would provide quality evidence to increase the probability of conviction.  
@@ -586,7 +587,7 @@ By the analysis we have made, the ommited variables impose a positive bias in al
     * It is evident in the third model the effect of young male percent population on crime rate.  The campaign should design crime prevention programs aimed at this demographic group (especially in counties with higher density). 
 
 <b>We suggest further research to include</b>
-<br/>
+<br>
 
 * The data set does not discriminate among crime types.  We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft).  This could lead to more interesting findings on the specific effects of the predictor variables per type of crime.  
 * The data set only includes data for the year 1987.  We think that this sample could be biased.  We would need to expand this research with more years.
