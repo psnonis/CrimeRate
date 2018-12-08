@@ -67,27 +67,29 @@ The primary motivation of this report is to provide causal estimates for determi
 
 ## Research Question
 
-Our research focuses on the following specific question: <b>Can crime rates be reduced by a tougher criminal justice system?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system affects crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using Probability of Arrests, Probability of Conviction, and Probability of Prison.
+Our research focuses on the following specific question: <b>Can crime rates be reduced by a tougher criminal justice system?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system affects crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using (1) Probability of Arrests, (2) Probability of Conviction, (3) Probability of Prison, and the (4) Average Prison Sentence. Toughness will be measured by the certainty of punishment based on the first three variables and the severity of punishment based on the fourth. Unfortunately, data for other forms of punishment is not available in our dataset and we will discuss their possible ommited bias on our model(s).
 
 $$
 \begin{aligned}
 \textbf{Crime Rate} & \sim \textbf{Probability of Arrest} \\
            & + \textbf{Probability of Conviction} \\
-           & + \textbf{Probability of Prison}
+           & + \textbf{Probability of Prison} \\
+           & + \textbf{Average Prison Sentence}
 \end{aligned}
 $$
 
-We will primarily use these three explanatory variables as proxies to measure the effects of the the criminal justice system on crime and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and thus, will further explore their impact in our extended second OLS model.
+We will primarily use these four explanatory variables as proxies to measure the effects of the the criminal justice system on crime and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and thus, will further explore their impact in our extended second OLS model. In the third OLS model we will add more variables to the model to gauge the robustness of our choices for regressors.
 
 ## Policy Hypothesis
 
-The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the three explanatory variables, Probability of Arrest, Probability of Conviction, and Probability of Prison. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
+The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the four explanatory variables, Probability of Arrest, Probability of Conviction, Probability of Prison, and Average Prison Sentence. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
 
 + <b>Increasing arrest rates will decrease crime rate</b>
 + <b>Increasing conviction rates will decrease crime rate</b>
 + <b>Increasing prison verdicts will decrease crime rate</b>
++ <b>Increasing prison sentence will decrease crime rate</b>
 
-Our recommendations will be based on sound statistically significant and practically significant results. We hope to reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables. 
+We will propose recommendations by finding robust, statistically significant, and practically significant regressors from our OLS models. We hope to either reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables or explain why our model may not support such a conclusion.
 
 # Data Loading and Cleaning
 
@@ -110,13 +112,13 @@ crime$prbconv   <- as.numeric(as.character(crime$prbconv)) # (3) fix non-numeric
 dim(crime)
 ```
 
-From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects.
+From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects. The **county** id is a subset of the U.S. Government's FIPS County Code, the full 5-digit code can be constructed by combining the North Carolina FIPS prefix 37 with the **county** id which are the last three digits. For example, 37001 is Almanance County which is the first observation from our dataset with county id of 1.
 
 ```{r crime_map, warning = FALSE, fig.align = 'center', fig.width = 9}
 mSetup(); mMapNC('crmrte', 'Crime Rate per Capita')
 ```
 
-The missing counties appear to be geographically diverse and gives no reason to suspect the sample quality in terms of randomness, at least with respect to geographical clustering.
+The missing counties appear to be geographically clustered to the western and estern sides of North Carolina and gives reason to suspect the sample quality in terms of randomness, with respect to geographical clustering.
 
 ## Deeper Analysis
 
@@ -162,10 +164,10 @@ Another anomaly we observed, both by the histogram and by the summary statistics
 crime$county[crime$density<0.0001]
 ```
 
-Searching for the FIPS code of this county (173), we see that it is Swain County. When we search the data for Swain County in 1987 in the United States Census Bureau database, we see that the density was in fact 0.0202. That is clearly an arithmetic error, generating a value a 1000 times smaller. Therefore, we corrected it as shown below.
+Searching for the FIPS code of this county (37173), we see that it is Swain County. When we search the data for Swain County in 1987 in the United States Census Bureau database, we see that the density was in fact 0.202. Further, analysis of the variable indicates that there is a code key error and the density data is infact **100s of people per sq. mile** and not number of people per sq. mile as it is stated. We corrected the arithmetic error for Swain County's density to bring it in line with the other counties as shown below.
 
 ```{r density_fix}
-crime$density[crime$county==173]<- crime$density[crime$county==173] * 1000
+crime$density[crime$county==173]<- crime$density[crime$county==173] * 10000
 crime$density[crime$county==173]
 ```
 
@@ -177,7 +179,7 @@ For the Service Industry Weekly Wages, there is one value that stands out as is 
 crime$county[crime$wser>2000]
 ```
 
-Searching for the FIPS code of this county (185), we see that it is Warren County. Coincidently only the service sector wages appear to be inflated for this county compared to the average weekly wages of all sectors across North Carolina. It is very likely this value was incorrectly multiplied by 10, and the actual value is 217.7 instead of 2177.1. However, since we cannot confirm that with certainty, we will leave it unmodified and not discard the observation.
+Searching for the FIPS code of this county (37185), we see that it is Warren County. Coincidently only the service sector wages appear to be inflated for this county compared to the average weekly wages of all sectors across North Carolina. It is very likely this value was incorrectly multiplied by 10, and the actual value is 217.7 instead of 2177.1. However, since we cannot confirm that with certainty, we will leave it unmodified and not discard the observation.
 
 # Model Building Process
 

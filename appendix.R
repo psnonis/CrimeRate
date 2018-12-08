@@ -66,7 +66,9 @@ sBuild <- function(dat,out){
             Mean     = round( mean(x), 2), Median    = round( median(x), 2),
             Min      = round(  min(x), 2), Max       = round(    max(x), 2),
             SD       = round(   sd(x), 2),
-            Spread   = list(x),            Histogram = list(hist(x, plot = F)$counts))
+            Spread   = list(x),
+            Scatter  = list(x),
+            Histogram = list(hist(x, plot = F)$counts))
     })))
 }
 
@@ -75,6 +77,10 @@ sTable <- function(tab){
                           Spread = function(z){
                               sapply(z, function(zz){
                                   knit(text = sprintf('`r sparkline(c(%s), type="box")`',
+                                                      paste0(zz, collapse = ',')), quiet = T)})},
+                          Scatter = function(z){
+                              sapply(z, function(zz){
+                                  knit(text = sprintf('`r sparkline(c(%s), type="line", fillColor=F)`',
                                                       paste0(zz, collapse = ',')), quiet = T)})},
                           Histogram = function(z){
                               sapply(z, function(zz){
