@@ -1,5 +1,5 @@
 ---
-title: 'Is the certatinty of severe punishment associated with crime rates?'
+title: 'Is enhancing certainty and severity of punishment associated with reducing crime rate?'
 subtitle: 'MIDS W203, Fall 2018, Lab 3'
 author: 'Eduarda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
@@ -39,7 +39,7 @@ output:
 </style>
 
 ```{r include}
-source('..\\appendix.R')
+source('appendix.R')
 ```
 
 ```{r setup, include=FALSE}
@@ -67,7 +67,7 @@ The primary motivation of this report is to provide causal estimates for determi
 
 ## Research Question
 
-Our research focuses on the following specific question: <b>Is the certatinty of severe punishment associated with crime rates?</b> As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using (1) Probability of Arrests, (2) Probability of Conviction, (3) Probability of Prison, and the (4) Average Prison Sentence. The certainty will be measured based on the first three variables and the severity of punishment based on the fourth.
+Our research focuses on the following specific question: <b>Can enhancing the certainty and the severity of punishment reduce the crime rate?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system affects crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using (1) Probability of Arrests, (2) Probability of Conviction, (3) Probability of Prison, and the (4) Average Prison Sentence. Toughness will be measured by the certainty of punishment based on the first three variables and the severity of punishment based on the fourth. Unfortunately, data for other forms of punishment is not available in our dataset and we will discuss their possible ommited bias on our model(s).
 
 $$
 \begin{aligned}
@@ -212,22 +212,24 @@ There is an extreme outlier on the left tail of the data, but we decided to keep
 
 ## Explanatory Variables, Base Model
 
-As explained in the introduction, in order to test our hypothesis regarding the impact of the certainty of severe punishment on crime rate, we are using 4 explanatory variables in our base model:
+As explained in the introduction, in order to test our hypothesis regarding the impact of certainty and severity of punishment on crime rate, we are using 4 explanatory variables in our base model:
 
 - Probability of Arrest: Defined as the ratio of offenses to arrests. Using this variable, we would like to assess the hypothesis that more stringent arrest protocols and improvements in crime detection would lead to lower crime rate.
 - Probability of Conviction: Defined as the ratio of convictions to arrests. If our hypothesis regarding a negative impact of higher convictions/arrests ratio on crime rate is true, then this could lead to highly actionable measures. For instance, stricter sentencing guidelines could implemented, followed by allocation of more resources to law enforcement agencies to collect more effective evidence.
-- Probability of Prison: Higher imprisonment rate, as one of the harshest types of criminal sentencing, could have a deterrent effect, leading to lower crime rate. Hence our interest in this variable. 
--Average Sentence Time (Days): Issuing longer sentence times, might affect the perception of the severity of punishment, and inhibit criminal activity. This also a variable that can lead to actionable insights, as it could be possible to change legislations towards longer senteces.
+- Probability of Prison: Higher imprisonment rate, as one of the harshest types of criminal sentencing, could have a deterrent effect, leading to lower crime rate. Hence our interest in this variable.
+- Average Sentence: Defined as the prison sentence in days. Issuing longer sentence times, might affect the perception of the severity of punishment, and inhibit criminal activity. This also a variable that can lead to actionable insights, as it could be possible to change legislations towards longer senteces. 
 
 For average sentence time, as to have more interpretable results, we will perform a log transformation, so we can evaluate in terms of percent variation in the average sentence time associated with a percent variation in crime rates.
 
-```{r avgsen_trans}
-crime$avgsen.log <- log(crime$avgsen) # log transformation
-
-p1 <- pHist(    crime$avgsen , breaks = 20, label = "Average Sentence"      )
-p2 <- pHist(log(crime$avgsen.log), breaks = 20, label = "Average Sentence (log)")
+```{r avgsen_plot, warning = FALSE, fig.align = 'center', fig.width = 9}
+p1 <- pHist(    crime$avgsen , breaks = 40, label = "Average Sentence"      )
+p2 <- pHist(log(crime$avgsen), breaks = 40, label = "Average Sentence (log)")
 
 plot_grid(p1, p2)
+```
+
+```{r avgsen_trans}
+crime$avgsen.log <- log(crime$avgsen) # log transformation
 ```
 
 Looking at the summary statistics of the 4 variables, we don’t see any alarming issues. Also, histograms show a fairly normal distribution for all 4 variables. Although, there is 1 extreme outlier in `prbarr` and one in `prbarr` (which are both from the same observation, county 115) we decided to keep them in our data because we don’t have any reason to believe that they are erroneous values. That said, we will evaluate the influence of these extreme point during or diagnostic analysis of regression models. 
@@ -235,26 +237,17 @@ Looking at the summary statistics of the 4 variables, we don’t see any alarmin
 County 115 consistently shows up in the histograms of crime rate, prbarr and prbconv as an extreme outlier. It has a low density (below first quartile), which could be the reason for the unusual values  in our variables of interest.
 
 ```{r m1_explanatory_plot, warning = FALSE, fig.align = 'center', fig.width = 9}
-p1 <- pHist(crime$prbarr,  breaks = 40, label = "Probability of Arrest"    )
-p2 <- pHist(crime$prbconv, breaks = 40, label = "Probability of Conviction")
-p3 <- pHist(crime$prbpris, breaks = 40, label = "Probability of Prison"    )
-p4 <- pHist(crime$avgsen.log, breaks = 40, label ="log Average Sentence Time (Days)")
+p1 <- pHist(crime$prbarr,     breaks = 40, label = "Probability of Arrest"    )
+p2 <- pHist(crime$prbconv,    breaks = 40, label = "Probability of Conviction")
+p3 <- pHist(crime$prbpris,    breaks = 40, label = "Probability of Prison"    )
+p4 <- pHist(crime$avgsen.log, breaks = 40, label = "Average Sentence (log)"   )
 
 plot_grid(p1, p2, p3, p4)
 ```
 
 Next, we looked at the scatterplots of dependent and explanatory variables for our base model. `prbarr`  seems to have a pretty linear relationship with `crmrte.log`. The same with `prbconv`, although we see a curvature towards the right side of the chart. 
 `prbpris` does not seem to have a linear relationship with `crmrte.log`, based on the scatterplot; it looks more like a quadratic relationship. However, we decided to leave `prbpris` as is, because a quadratic transformation would make the interpretation of our model unnecessarily complicated. 
-`avgsen.log` also points torward a more quadratic relationship with `crmrte.log`, but making such further transformation to the avgsen variable (already logarithmically transformed), will damage the interpretability of our model, so we will leave `avgsen.log` as is.
-
-```{r pScatterMatrix changing parameters}
-pScatterMatrix<-function(data, columns)
-{
-    ggscatmat(data, columns, alpha = 0.5) +
-    geom_smooth(method = 'lm', colour = '#dd4814') + theme_wsj()
-}
-```
-
+`avgsen.log` also points torward a more quadratic relationship with `crmrte.log`, but making such further transformation to the avgsen variable (already logarithmically transformed), will damage the interpretability of our model, so no further transformation of `avgsen.log` is performed.
 
 ```{r m1_correlation, warnings = FALSE, fig.align = "center", fig.width = 9}
 pScatterMatrix(crime, columns = c(26,4,5,6,27))
@@ -335,16 +328,13 @@ m1 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log, data = crime)
 
 While holding all other covariates and unobserved factors fixed:
 
-- $\beta_0$ : `intercept` is -3.269, which can not be interpreted in a meaningful way without considering other coefficients
-- $\beta_1$ : `prbarr`    is -2.061, which means that every 0.01 increase in probability of arrest is associated with an approximate decrease of 2.06% in crime rate.
-- $\beta_2$ : `prbconv`   is -0.755, which means that every 0.01 increase in probability of conviction is associated with approximate decrease of 0.75% in crime rate.
-- $\beta_3$ : `prbpris`   is 0.456, which means that every 0.01 increase in probability of prison is associated with a 0.46% increase in crime rate
--$\beta_4$: `avgsen.log`  is 0.253, which means that every 1% increase in the average sentence time is associated with a 0.25% increase in the crime rate.
+- $\beta_0$ : `intercept`  is `r coef(m1)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients
+- $\beta_1$ : `prbarr`     is `r coef(m1)[2]`, a 0.01 increase in probability of arrest,     crime rate will go down by approximately `r coef(m1)[2]`%
+- $\beta_2$ : `prbconv`    is `r coef(m1)[3]`, a 0.01 increase in probability of conviction, crime rate will go down by approximately `r coef(m1)[3]`%
+- $\beta_3$ : `prbpris`    is `r coef(m1)[4]`, a 0.01 increase in probability of prison,     crime rate will go up   by approximately `r coef(m1)[4]`%
+- $\beta_4$ : `avgsen.log` is `r coef(m1)[5]`, a   1% increase in the average sentence,      crime rate will go up   by approximately `r coef(m1)[5]`%
 
-
-It is worth noting that the coefficients for `prbarr` and `prbconv` amplify the effect of increasing `prbarr` or `prbconv`. This is not true for the coefficients for `prbpris` and `avgsen.log`.
-
-Another point worth noting is that, while `prbarr` and `prbconv` behave as we expected, `prbpris` and `avgsen.log` don't: an increase in those variables is associated with an increase in crime rates, the opposite of the effect we expected.
+It is worth noting that the coefficients for `prbarr` and `prbconv` amplify the effect of increasing `prbarr` or `prbconv`. This is not true for the coefficients for `prbpris` and `avgsen.log`. Another point worth noting is that, while `prbarr` and `prbconv` behave as we expected, `prbpris` and `avgsen.log` do not. An increase in those variables is associated with an increase in crime rates, the opposite of the effect we expected.
 
 ### Goodness of Fit - M1
 
@@ -388,18 +378,243 @@ Despite the fact that points on chart seem to spread out as we move to the right
 
 <b>Residuals vs Leverage</b>
 <br>
-As suspected, the residual from observation row 51 (county 115), has a high influence on our model, with a Cook’s distance between 0.5 and 1.
+As suspected, the residual from observation row 51 (county 115), has a high influence on our model, with a Cook’s distance of about 1
 
 <b>Breusch-Pagan Test</b>
 <br>
-In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m1)$p.value`</b> was greater than 0.05, the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words, there is not enough evidence to claim our model has heteroskedasticity.
+In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m1)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
 
 <b>Shapiro-Wilk Test</b>
 <br>
-In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m1$residuals)$p.value`</b> is greater than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can not be rejected. In other words, there is not enough evidence to assume the residuals in our model are not normally distributed.
+In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m1$residuals)$p.value`</b> is greater than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can not be rejected. In other words the residuals in our model are normally distributed.
 
 ### Interpretation and Conclusion - M1
 
 As evidenced by the coefficients of our base model, we can state that increases in probability of arrest and probability of conviction could potentially lower crime rate. In other words, a policy focused on more stringent arrest protocols and stricter criminal sentencing could be proposed by the political campaign. 
 The probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. We don’t believe this relationship means that, for example, if we increase the probability of prison, the crime rate will go up. We think that this might be due to the fact that the prison to conviction ratio is already high in areas where crime rate is high. For a more effective assessment of such a relationship, we need to have data to observe the trends in crime rate before and after the prison to conviction rate goes up as a result of policy change, which is not currently included in our dataset, which is snapshot of 1987.  An additional possible explanation is that incarceration does not deter crime as it exposes the prisoners to an environment which could amplify their criminal behaviour when they finish their sentence. 
 The log of average sentence has a positive coefficient in our base model, meaning issuing higher sentence times on average is associated with higher crime rate. However, we don't believe this means that higher sentence times will drive the crime rate up. We understand this might be due to the nature of our dataset, focused in 1987 only. Maybe areas with higher crime rates simply naturally issued more sentences and higher sentence times, as a measure to inhibit crimes, however, the effect is yet to be noticed in the upcoming years.
+
+## Extended Model
+
+As explained in the Model Building Process section, we are adding 2 other covariates to out second model: Avg. Sentence, Days (`avgsen`) and Police per Capita(`polpc`). Not only these 2 variables could help us provide actionable recommendations to the political campaign, but also, we assumed, they are correlated with the 3 variables in the base model and thus make the model more accurate. 
+
+$$
+\begin{aligned}
+\textbf{log(Crime Rate)} & \sim \textbf{Probability of Arrest} \\
+           & + \textbf{Probability of Conviction} \\
+           & + \textbf{Probability of Prison} \\
+           & + \textbf{log(Average Sentence)} \\
+           & + \textbf{log(Police per Capita)} \\
+           & + \textbf{u}
+\end{aligned}
+$$
+
+```{r m2}
+m2 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log, data = crime)
+```
+
+### Coefficients - M2
+
+While holding all other covariates and ubobserved factors fixed:
+
+- $\beta_0$ : `intercept`  is `r coef(m2)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients
+- $\beta_1$ : `prbarr`     is `r coef(m2)[2]`, we could predict that for every 0.01 increase in probability of arrest, crime rate will go down by approximately 2.35%
+- $\beta_2$ : `prbconv`    is `r coef(m2)[3]`, we could predict that for every 0.01 increase in probability of conviction, crime rate will go down by approximately 0.73%
+- $\beta_3$ : `prbpris`    is `r coef(m2)[4]`, we could predict that for every 0.01 increase in probability of prison is associated with a 0.39% increase in crime rate
+- $\beta_4$ : `polpc.log`  is `r coef(m2)[5]`, we could predict that for every   1% increase in police per capita is associated with a 0.62% increase in crime rate
+- $\beta_5$ : `avgsen.log` is `r coef(m2)[6]`, we could predict that for every   1% increase in avg. prison sentence, crime rate will go down by approximately 0.065%
+
+### Goodness of Fit - M2
+
+* The R-squared value is <b>`r summary(m2)$r.squared`</b>, which means around 61% of the variation in crime rate could be explained by our model. Even though this is a higher number compared to our base model, it doesn’t necessarily show a better fit because when we add variables R-squared goes up anyway. Because of this we look at the AIC value to compare the two models in terms of goodness of fit.
+* The Akaike Information Criterion value is <b>`r AIC(m2)`</b>, which is lower than that of base model value `r AIC(m1)`. This confirms that the extended model is more accurate than the base model.
+
+### 6 CLM Assumptions - M2
+
+1. Linearity: Our model is linear in parameters.
+2. IID Sampling: See our note for the base model. 
+3. Multicollinearity: We didn’t see any sign of perfect collinearity among our explanatory variables. In addition, R would warn users if such collinearity exists, which did not happen throughout our analysis.
+4. Zero Conditional Mean: We will cover that below.
+5. Homoskedasticity: See below.
+6. Normality: See below.
+
+### Model Diagnostics - M2
+
+```{r m2_residuals, fig.align = 'center', fig.width = 9}
+pHist(m2$residuals, breaks = 20, label = "Residuals")
+```
+
+<b>Residuals Plot</b>
+</br>
+The histogram of residuals show a fairly normal distribution (especially compared with the same plot for base model) where the bulk of the data points are. However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution. 
+
+```{r m2_diagnostics, fig.align = 'center', fig.width = 9}
+pModel(m2, title = "Model 2 Diagnostic Plots")
+```
+
+<b>Residual vs Fitted</b>
+<br>
+The residual vs fitted spline is much flatter than that of base model. However, it shows a curvature with positive slope on the right side, deviating from zero. This might be due to the fact that we don’t have enough data points.
+
+<b>Normal Q-Q</b>
+<br>
+Most points are on, or fairly close to the diagonal line. However, as in base model, we see some deviations towards the two extremes of the line. Thus, we will take additional steps to verify this assumption. 
+
+<b>Scale-Location</b>
+<br>
+Despite the fact that points on chart seem to spread out as we move to the right, there is not strong sign of heteroskedasticity, since we have very few points on the left side.
+
+<b>Residuals vs Leverage</b>
+<br>
+As in the base model, the residual from observation row 51 (county 115), has a high influence on our model. But in model 2, its Cook’s distance is much lower than what we saw in the base model.
+
+<b>Breusch-Pagan Test</b>
+<br>
+In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m2)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
+
+<b>Shapiro-Wilk Test</b>
+<br>
+In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m2$residuals)$p.value`</b> is smaller than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can be rejected. That said, given the sample size of >30 we can assume that the sampling distribution of our coefficients is normal, so assumption 6 (normality) still holds in our model.
+
+### Interpretation and Conclusion - M2
+
+As shown in the analysis above, our second model confirms what we found in our base model: increases in probability of arrest and probability of conviction could potentially lower crime rate. In other words, a policy focused on more stringent arrest protocols and stricter criminal sentencing could be proposed by the political campaign. Moreover, an increase in avg. prison sentence could lead to lower crime rate as explained above. This is another recommendation we plan to provide to the political campaign, a policy for longer prison time. 
+
+As in the base model, the probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. Also, in model 2, we found that increase in police per capita is associated with higher crime rate. We believe that the relationships we observed might be due to the fact that the prison to conviction ratio and police per capita are already high in areas where crime rate is high. As stated before, for a more effective assessment of this situation, we would have to have data to see the trends in crime rate before and after changes in prison/conviction ratio and police per capita where they are implemented. 
+
+## Kitchen-sink Model
+
+For the third model, we are adding to the second model the rest of  the variables in the dataset as predictors, with the exception of year and county.  With this approach we are not following a criteria for inclusion of a variable in the model (i.e. is the variable relevant or not in the context of our research question, does it have a confounding effect or not with the variables in the previous models) and we do not expect to obtain the most parsimonious model that describes our data.  This third model would probably be an overfitting model.
+
+$$
+\begin{aligned}
+\textbf{log(Crime Rate)} & \sim \textbf{Everything} \\
+           & + \textbf{u}
+\end{aligned}
+$$
+
+```{r m3}
+m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log + mix.log +
+             density + taxpc + west + central + urban + pctmin80 + pctymle +
+             wcon + wtuc + wtrd + wfir + wser + wmfg + wfed + wsta +
+             wloc, data = crime)
+```
+
+### Coefficients - M3
+
+### Goodness of Fit - M3
+
+* The R-squared value is <b>`r summary(m3)$r.squared`</b>, which means around 86% of the variation in crime rate could be explained by our third model. Even though this is a higher number compared to our previous models, it doesn’t necessarily show a better fit because as we add variables R-squared goes up anyway.
+* The adjusted R-squared value is <b>`r summary(m3)$adj.r.squared`</b> (compared to an adjusted R-squared value of 0.59 for the second model). When comparing two models used to predict the same response variable, we generally prefer the model with the higher value of adjusted R2, however, we do not know if another specification model with less variables than the third model could have a higher adjusted R2.
+* Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m2)`. The third model is more accurate according to this test but it is probably not the most parsimonious model.
+
+### 6 CLM Assumptions - M3
+
+1. Linearity: Our model is linear in parameters
+2. IID Sampling: See our note for the base model
+3. Multicollinearity: We didn’t see any sign of perfect collinearity among our independent variables. In addition, R would warn users if such collinearity exists, which did not happen throughout our analysis
+Zero conditional mean: We will cover that in the next phase of the project
+4. Homoscedasticity: see below
+5. Normality: see below
+
+### Model Diagnostics - M3
+
+```{r m3_residuals, fig.align = 'center', fig.width = 9}
+pHist(m3$residuals, breaks = 20, label = "Residuals")
+```
+
+<b>Residuals Plot</b>
+<br>
+The histogram of residuals show a fairly normal distribution.  However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution.
+
+```{r m3_diaggnostics, fig.align = 'center', fig.width = 9}
+pModel(m3, title = "Model 3 Diagnostic Plots")
+```
+
+### Interpretation and Conclusion - M3
+
+In addition to what we concluded for the previous models specifications, we could advise the political campaign, that given that an increase in density and in percent of young male potentially predict an increase in crime rate (see coefficients above), they should explore the possibility of defining outreach program specifically designed for this demographic group in urban settings.  In addition the campaign should not base their strategy for the outreach programs on percent of minorities in the counties.
+
+## Regression Table
+
+```{r regression, results = "asis"}
+stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
+          column.labels = c("Base", "Extended", "Kitchen-sink"),
+          keep.stat = c("rsq", "n"), omit.table.layout = "n",
+          dep.var.labels = c("Crime Rate per Capita"), ci = T)
+```
+
+<br>
+<b>[placeholder: include commentary on practical significance of coefficients in the final report, once we've received peer feedback]</b>
+
+# Omitted Variables Analysis
+
+We have proposed to model the logarithm of the crime rate `log(crmrte)` as a linear combination of the probability of arrest `prbarr`, the probability of conviction `prbconv`, and the probability of prison `prbpris`.
+<br>
+
+However, other variables might impact the Crime Rate<br>
+
+* Percent of Population with Registered Guns `guns`
+* Average Years of Education `avgeduc`
+* Unemployment Rates `unmprt`
+* Percent of Population Below the Poverty Line `pctpov`
+
+Based on this a more realistic model may look like the following.
+$$
+log(crmrte) = \beta_0 + \beta_1 \cdot prbarr + \beta_2 \cdot prbconv + \beta_3 \cdot prbpris + \beta_4 \cdot guns \\
++ \beta_5 \cdot avgeduc + \beta_6 \cdot unmprt + \beta_7 \cdot pvtpov + u
+$$
+
+Compared to the base model, build using the available data.
+
+$$
+log(crmrte) = \alpha_0 + \alpha_1 \cdot prbarr + \alpha_2 \cdot prbconv + \alpha_3 \cdot prbpris + w
+$$
+
+To assess the direction of the bias, we will analyse each omitted variable.
+
+## Bias Table
+
+```{r bias_table, echo=FALSE, include=TRUE, results="asis"}
+bias_table <- data.frame(c("Percent of Population with Registered Guns","$guns = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_4 > 0$ \\ accidental gunshots, bad reactions in traffic, wrongly assuming risk",
+                           "$\\gamma_1 > 0$ \\ easier to catch crimes commited with registered guns", "$\\gamma_2 > 0$ \\ easier to convict with more evidence - registered gun","$\\gamma_3 > 0$ \\ more likely to issue a sentence with prison time for crimes commited with a gun", "$\\gamma_1 \\cdot \\beta_4 > 0$ - positive bias - $\\beta_1$ superestimated \\ $\\gamma_2 \\cdot \\beta_4 > 0$ - positive bias - $\\beta_2$ superestimated \\ $\\gamma_3 \\cdot \\beta_4 > 0$ - positive bias - $\\beta_3$ superestimated"), c("Average Years of Education","$avgeduc = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_5 < 0$ \\ more education leads to more tolerance and better understanding of the laws",
+                           "$\\gamma_1 < 0$ \\ more educated people will take some extra precaution about getting caught", "$\\gamma_2 = 0$ \\ conviction is related to the nature and the evidences for each crime, not the person commiting it","$\\gamma_3 = 0$ \\ the issuing of a sentence should be only related to the nature of the crime commited", "$\\gamma_1 \\cdot \\beta_5 > 0$ - positive bias - $\\beta_1$ superestimated"), c("Unemployment Rates","$unmprt = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_6 > 0$ \\ unemployment might lead to people seeking illegal forms of income",
+                           "$\\gamma_1 = 0$ \\ arrest should be related to the evidences available for the police to catch the criminal", "$\\gamma_2 = 0$ \\ conviction is related to the nature and the evidences for each crime, not the person commiting it","$\\gamma_3 > 0$ \\ judges might consider that an unemployed person is more likely to commit a crime again, as means of income, and would be more prone to issuing a sentence with prison time", "$\\gamma_3 \\cdot \\beta_6 > 0$ - positive bias - $\\beta_3$ superestimated"), c("Percent of Population Below the Poverty Line","$pctpov = \\gamma_0 +\\gamma_1 \\cdot prbarr + \\gamma_2 \\cdot prbconv + \\gamma_3 \\cdot prbpris +v$", "$\\beta_7 > 0$ \\ poverty might lead to people seeking illegal forms of income",
+                           "$\\gamma_1 = 0$ \\ arrest should be related to the evidences available for the police to catch the criminal", "$\\gamma_2 = 0$ \\ conviction is related to the nature and the evidences for each crime, not the person commiting it","$\\gamma_3 > 0$ \\ judges might consider that a very poor person is more likely to commit a crime again, as means of income, and would be more prone to issuing a sentence with prison time", "$\\gamma_3 \\cdot \\beta_7 > 0$ - positive bias - $\\beta_3$ superestimated"))
+
+colnames(bias_table) <- c("guns", "avgeduc", "unmprt", "pctpov")
+rownames(bias_table) <- c("Description" ,"Linear Model Expression", "Coefficient Value for Crime Rate / Explanation","Value for $\\gamma_1$ (coefficient for prbarr) / Explanation","Value for $\\gamma_2$ (coefficient for prbconv) / Explanation", "Value for $\\gamma_3$ (coefficient for prbpris) / Explanation", "Bias")
+
+kable(bias_table, escape = FALSE)
+```
+
+## Bias Conclusion
+
+By the analysis we have made, the ommited variables impose a positive bias in all the coefficients for the present variables, meaning our model is actually superestimating the correlation between each independent variable and our dependent variable
+
+# Conclusion
+
+<b>We suggest the following</b>
+<br>
+
+* The political campaign should design policies aimed to increase probability of arrest and probability of conviction.  Actionable insights could include:
+    + Invest in the police force modernization. The inclusion of cameras in public sites, for example, would increase the probability of arrest and would provide quality evidence to increase the probability of conviction.  
+    + Increase the budget  for police force training, this would result in a more efficient and effective police force, therefore increasing the probabilities of arrest and conviction
+    + Design policy focused on more stringent arrest protocols and stricter criminal sentencing. 
+
+* Increasing the police per capita ratio or police force size does not decrease crime rate.  This is not very intuitive and we think it could be due to the following reasons:
+    + The relationship might be inverse: counties with high crime rates tend to increase their police force, however, that increase is yet to achieve a result in crime reduction.
+    + Reporting of crimes: in counties with more police officers, people might feel more inclined to report the crimes, and the higher number of cops might also mean closer police stations for the population to report those crimes. That doesn’t necessarily mean that counties with less police have less crimes: it can also mean that there is a great number of crimes that don’t get reported.
+    * It is evident in the third model the effect of young male percent population on crime rate.  The campaign should design crime prevention programs aimed at this demographic group (especially in counties with higher density). 
+
+<b>We suggest further research to include</b>
+<br>
+
+* The data set does not discriminate among crime types.  We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft).  This could lead to more interesting findings on the specific effects of the predictor variables per type of crime.  
+* The data set only includes data for the year 1987.  We think that this sample could be biased.  We would need to expand this research with more years.
+* Adding data on specific percent of young male risk groups, such as school dropouts, teenager parenting, young male substance abuse, could provide more actionable insights to design specific outreach programs.
+
+# Appendix
+
+```{r appendix, code = readLines('appendix.R')}
+```
