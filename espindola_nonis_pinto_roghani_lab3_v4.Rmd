@@ -484,7 +484,22 @@ As in the base model, the probability of prison has a positive coefficient in ou
 
 ## Kitchen-sink Model
 
-For the third model, we are adding to the second model the rest of  the variables in the dataset as predictors, with the exception of year and county.  With this approach we are not following a criteria for inclusion of a variable in the model (i.e. is the variable relevant or not in the context of our research question, does it have a confounding effect or not with the variables in the previous models) and we do not expect to obtain the most parsimonious model that describes our data.  This third model would probably be an overfitting model.
+The key purpose of this model is to demonstrate the robustness of our previous results to model specification.  That means, to make sure that our conclusions hold under different assumptions.
+For the third model, we define a specification with almost all variables in the dataset. In particular, we are interested in the inclusion of socio-economic variables that are usually related to crime rate and that would  extract probable omitted variables from the error term. We are including:
+
+*Density, according to our background knowledge crime rates are higher in cities than in rural areas. We also note that this variable has a confounding effect with prbarr and prbconv. Being "invisible" is a characteristic of life in the cities.  A criminal in a city would likely have a lower probability of being recognized and therefore a lower probability of being arrested/convicted. We will use the log transformation of density in the specification with two goals: improve the "normality" of the distribution and ease of interpretation.
+
+*Tax revenue per capita, would likely be a determinant factor for crime rate.  A county with higher taxpc, would probably invest more in their law enforcement capabilities, increasing the probabilities of getting caught, convicted and punished.  
+
+*Percent of minorities, a common narrative is that minorities are more likely to be arrested for some crimes, we want to measure the effect of minorities percent in crime rate.
+
+*Percent of young male, according to our background knowledge, men commit more crimes than women and younger men commit more crimes than older men.  In the context of our research question, being young makes you unaware of the probabilities of punishment? Do young people think they are invincible, are they more reckless?
+
+*Weekly wages for different industries (wcon + wtuc + wtrd + wfir + wser + wmfg), higher wages would would likely be associated with a lower crime rate as potential offenders have an incentive to obtain money through legal means (however not all crimes have a pecuniary goal). 
+
+*Weekly wages for local employees, in the context of our research question, higher wages would be likely be associated with better salaries for local police. Under the assumption that better salaries mean more motivated police and in addition is accompannied by better equipment/technology, this would increase the perception of being caught/convicted.  Note that we are not including weekly wages for state and federal employees as we would not know how to interpret them by count. For all wages variables we take a log transformation, in order to ease the practical significance interpretation.
+
+With this third specification, we do not expect to obtain the most parsimonious model that describes our population, and would probably be an overfitting model.
 
 $$
 \begin{aligned}
@@ -494,46 +509,73 @@ $$
 $$
 
 ```{r m3}
-m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log + mix.log +
-             density + taxpc + west + central + urban + pctmin80 + pctymle +
-             wcon + wtuc + wtrd + wfir + wser + wmfg + wfed + wsta +
-             wloc, data = crime)
+m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log +  mix.log + log(density) + taxpc  + pctmin80 + pctymle + log(wcon) + log(wtuc) + log(wtrd) + log(wfir) + log(wser) + log(wmfg)  + log(wloc), data = crime)
 ```
 
-### Coefficients - M3
+### CLM Assumptions - M3
 
-### Goodness of Fit - M3
+<b>Linearity</b> 
+The specification is linear in parameters.
 
-* The R-squared value is <b>`r summary(m3)$r.squared`</b>, which means around 86% of the variation in crime rate could be explained by our third model. Even though this is a higher number compared to our previous models, it doesn’t necessarily show a better fit because as we add variables R-squared goes up anyway.
-* The adjusted R-squared value is <b>`r summary(m3)$adj.r.squared`</b> (compared to an adjusted R-squared value of 0.59 for the second model). When comparing two models used to predict the same response variable, we generally prefer the model with the higher value of adjusted R2, however, we do not know if another specification model with less variables than the third model could have a higher adjusted R2.
-* Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m2)`. The third model is more accurate according to this test but it is probably not the most parsimonious model.
+<b>IID Sampling</b> 
+See our note for the base model.
 
-### 6 CLM Assumptions - M3
+<b>Multicollinearity</b>
+R would warn users if such collinearity exists, which did not happen throughout our analysis.  We wanted to assess to what extent imperfect multicolinearity could affect our inference, we applied the vif test to our model, the results show that none of the regressors is closely predicted from the other regressors, all values are below 2.7.
 
-1. Linearity: Our model is linear in parameters
-2. IID Sampling: See our note for the base model
-3. Multicollinearity: We didn’t see any sign of perfect collinearity among our independent variables. In addition, R would warn users if such collinearity exists, which did not happen throughout our analysis
-Zero conditional mean: We will cover that in the next phase of the project
-4. Homoscedasticity: see below
-5. Normality: see below
-
-### Model Diagnostics - M3
-
-```{r m3_residuals, fig.align = 'center', fig.width = 9}
-pHist(m3$residuals, breaks = 20, label = "Residuals")
-```
-
-<b>Residuals Plot</b>
-<br>
-The histogram of residuals show a fairly normal distribution.  However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution.
 
 ```{r m3_diaggnostics, fig.align = 'center', fig.width = 9}
 pModel(m3, title = "Model 3 Diagnostic Plots")
 ```
 
+<b>Zero conditional mean</b>
+We visually diagnosed this assumption using the residuals vs. fitted values plot.  We observed that the residuals bounce randomly around the 0 line. We also observed that the red line (which is a scatterplot smoother, showing the average value of the residuals at each value of fitted values) is almost flat, with the exception of the right extreme where it goes down, but this is due to the presence of just one observation at that level.  We conclude that there is no violation of this assumption, meaning that our parameters are unbiased (assuming that all the conditions for IID Sampling are met).
+
+<b>Homoskedasticity</b>
+The residuals vs. fitted values plot does not seem to indicate heteroskedasticiy, the band seems to have even thickness, with the exception of the extremes where we have very few observations.  However, it is not a perfect band, the observations in the center seem to have a greater variance, therefore we examined the scale-location plot. This plot does not completely allow us to discard heterokedasticiy. We ran the Breusch-Pagan test to confirm the presence of heterokedasticity. The null-hypothesis for this test is absence of heteroskedasticity.  The p-value we obtained is  <b>`r bptest(m3)$p.value`</b>, meaning that we can not reject the null-hypothesis.  However, it is close to 0.05, we need to proceed with robust standardard errors. 
+
+<b>Normality</b> 
+To check normality of errors, we first examined the histogram of the model residuals.
+
+```{r m3_residuals, fig.align = 'center', fig.width = 9}
+pHist(m3$residuals, breaks = 20, label = "Residuals")
+```
+
+The plot shows a fairly normal distribution, with no missing values and no spikes. However, we can observe a slight leftward skew. We also examined the qqplot.  The plot shows that the majority of observations are aligned with the diagonal, however, we can also see deviations from the diagonal on the two extremes of the chart. We might also consider the formal Shapiro-Wilk test of normality. The result p-value of <b>`r shapiro.test(m2$residuals)$p.value`</b> is smaller than 0.05, meaning that we can reject the null hypothesis (sampling distribution of our coefficients is normal).  However, our sample size is 90, so we will rely on the Central Limit Theorem to assume normality of errors.
+
+
+### Interpretations of Coefficients - M3
+
+Having validated the compliance of the model with OLS assumptions, we proceed to examine the estimators of the parameters in our model of the population.
+
+We notice that only prbarr, prbconv, polpc.log, density and pctmin80 are statiscally significant.  The interpretation of these coefficients, while holding all other regressors and unobserved factors fixed is the following:
+
+
+- $\beta_0$ : `intercept`  is `r coef(m3)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients
+- $\beta_1$ : `prbarr`     is `r coef(m3)[2]`, every 0.01 (1%) increase in probability of arrest is associated with a 1.66% decrease in  crime rate.  
+- $\beta_2$ : `prbconv`    is `r coef(m3)[3]`, every 0.01 (1%) increase in probability of conviction is associated with a 0.47% decrease in  crime rate.
+- $\beta_5$ : `polpc.log`  is `r coef(m3)[6]`, every 1% increase in police per capita is associated with a 0.5% increase in  crime rate.
+- $\beta_7$ : `log(density)`  is `r coef(m3)[8]`, every 1% increase in density is associated with a 0.28% increase in  crime rate.
+- $\beta_9$ : `pctmin80`  is `r coef(m3)[10]`, every 0.01 (1%) increase in percent of minorities is associated with a 0.28% increase in  crime rate.
+
+
+### Goodness of Fit - M3
+
+* The R-squared value is <b>`r summary(m3)$r.squared`</b>, which means around 88% of the variation in crime rate could be explained by our third model. This is a higher number compared to our previous models, it doesn’t necessarily mean a better fit because as we add variables R-squared goes up anyway.
+* The adjusted R-squared value is <b>`r summary(m3)$adj.r.squared`</b> , however, we do not know if another specification model with less variables than the third model could have a higher adjusted R2.
+* Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m2)`. 
+
+The values r-squared and r-squared adjusted are very high, this specification is probably an overfit model, too complicated for our data set and with too many regressors for our number of observations.
+
+
 ### Interpretation and Conclusion - M3
 
-In addition to what we concluded for the previous models specifications, we could advise the political campaign, that given that an increase in density and in percent of young male potentially predict an increase in crime rate (see coefficients above), they should explore the possibility of defining outreach program specifically designed for this demographic group in urban settings.  In addition the campaign should not base their strategy for the outreach programs on percent of minorities in the counties.
+
+The main goal of running this third specification was to assess the robustness of our conclusions for model 2, we notice that:
+*The coefficients of prbarr, prbconv and polpc.log are statistically significant, as in model 2.  The coefficients for prbarr and prbconv have changed and the variation in crime rate associated with a variation in these regressors has been reduced.  The coefficients do show sensitivity to the change in the specification, but still show relevance. This confirms our conclusion that certainty of punishment is associated with crime rate.  
+*The coefficients of prbpris and time served in prison (avgsen.log) are not statiscally significant, as in model 2.  This confirms our conclusion that severity of punishment is not associated with crime rate.
+*The coefficient for density is statistically significant.  This was expected, according to our background knowledge. And it is aligned with the hypothesis that living in a city decreases the probability of being recognized and as such the probability of being arrested/convicted.  Is the reduction in the coefficients for probability of arrest and probability of conviction due because density is also accounting for the certainty of being punished? Counties with more density will show a higher crime rate. 
+*The coefficient for pctmin80 is statistically significant, increased percent of minorities is associated with an increase in crime rate. We do not have enough domain knowledge but could speculate that poverty, discrimination, lack of opportunities etc, might play a role.  In the context of our research question, is the certainty of punishment mitigated for this population group because of their socio-economic factors?
 
 ## Regression Table
 
@@ -597,22 +639,42 @@ By the analysis we have made, the ommited variables impose a positive bias in al
 <b>We suggest the following</b>
 <br>
 
+We started this study with the following research question:  Is enhancing certainty and severity of punishment associated with reducing crime rate ?
+
+The main conclusion we can take away from our analysis is that certainty of punishment is associated, however, severity of punishment is not.
+
+The goal of the political campaign is to reduce crime rate. Our analysis is not a causal model, because we can’t measure (or even identify) all variables that might cause crime rate and these omitted variables might affect the results or our conclusions.
+
+Having said that, the probability of being arrested and convicted are associated with a lower crime rate.  Therefore, we advice the political campaign to design policies that increase these probabilities.  
+The political campaign should design policies focused on increasing the certainty of punishment (do criminals expect to get caught and convicted).  We think that this can be accomplished with a strategy of publicity campaigns focused on increasing the “perception” of getting caught and convicted.  
+
+For example, investing in cameras/surveillance equipment that will be placed in hot spots in the counties, will probably conduct to more arrests (offenders identification) and convictions (the evidence will support the prosecutors cases). And therefore, the ratios used as probability proxies will increase. However, potential offenders do not check the proportion arrests to offenses when they go through the cost/benefit analysis of a criminal activity,  they use their perception of being punished and probably rely on what has happened to relatives, acquaintances, etc that have conducted similar criminal activities.  That is why we advise to develop publicity campaigns that should accompany each initiative.  The campaigns will assure that a bigger segment of the population hears about the initiative and should have the effect to increase the perception of certainty of being punished, persuading the potential criminals to change their behaviour.  
+
+According to the results of our research, campaign focused more on the risk of apprehension and conviction, results of past police operations/crackdowns, etc, would have a better crime deterrent effect than informing of law changes that increase sentence time. Other example, if the police detects that criminals  vandalize or break in cars in parking lots, a campaign threatening police apprehension for this type of crime would  be effective.
+
+Other actionable insights could include:
 * The political campaign should design policies aimed to increase probability of arrest and probability of conviction.  Actionable insights could include:
     + Invest in the police force modernization. The inclusion of cameras in public sites, for example, would increase the probability of arrest and would provide quality evidence to increase the probability of conviction.  
     + Increase the budget  for police force training, this would result in a more efficient and effective police force, therefore increasing the probabilities of arrest and conviction
-    + Design policy focused on more stringent arrest protocols and stricter criminal sentencing. 
+   + Design policy focused on more stringent arrest protocols.
 
-* Increasing the police per capita ratio or police force size does not decrease crime rate.  This is not very intuitive and we think it could be due to the following reasons:
+
+On the other hand, our research  shows that probability of being sent to prison and time served in prison  do not seem to predict a lower crime rate.  Possible explanations are that prisons do not really rehabilitate,  inmates learn new and better ways to commit crimes, are locked-up with bad influencers, and as such, more prison time could induce recidivism.  Therefore we do not suggest the political campaign to explore policies associated with increasing sentence time.
+
+Increasing the police per capita ratio or police force size does not decrease crime rate.  This is not very intuitive and we think it could be due to the following reasons:
     + The relationship might be inverse: counties with high crime rates tend to increase their police force, however, that increase is yet to achieve a result in crime reduction.
     + Reporting of crimes: in counties with more police officers, people might feel more inclined to report the crimes, and the higher number of cops might also mean closer police stations for the population to report those crimes. That doesn’t necessarily mean that counties with less police have less crimes: it can also mean that there is a great number of crimes that don’t get reported.
-    * It is evident in the third model the effect of young male percent population on crime rate.  The campaign should design crime prevention programs aimed at this demographic group (especially in counties with higher density). 
+
+Having said that, increasing the number of police "in the streets" or in hot spots in the cities, would increase the perception of getting caught and would probably work as a deterrent effect on crime rate. 
+
+It is evident in the third model the association of  percent of minorities with crime rate.  The campaign should design crime prevention programs aimed at this demographic group (especially in counties with higher density). 
 
 <b>We suggest further research to include</b>
 <br>
 
 * The data set does not discriminate among crime types.  We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft).  This could lead to more interesting findings on the specific effects of the predictor variables per type of crime.  
 * The data set only includes data for the year 1987.  We think that this sample could be biased.  We would need to expand this research with more years.
-* Adding data on specific percent of young male risk groups, such as school dropouts, teenager parenting, young male substance abuse, could provide more actionable insights to design specific outreach programs.
+* Adding data on specific percent of minorities sub-groups, such as school dropouts, teenager parenting, substance abuse, could provide more actionable insights to design specific outreach programs.
 
 # Appendix
 
