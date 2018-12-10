@@ -5,7 +5,14 @@ pModel <- function(m, title)
     autoplot(m, smooth.colour = "#dd4814", smooth.size = 1, alpha = 0.8, size = 2) +
     theme(title = element_text(size = 10, face = 'bold', family = 'sans'),
           plot.background = element_rect(fill = "#f8f2e4"))
+}
 
+pDiagnostics <- function(m, which)
+{
+    par(mfrow = c(1, 1))
+    autoplot(m, which = which, ncol = 1, smooth.colour = "#dd4814", smooth.size = 1, alpha = 0.8, size = 2) +
+        theme(title = element_text(size = 10, face = 'bold', family = 'sans'),
+              plot.background = element_rect(fill = "#f8f2e4"))
 }
 
 pHist <- function(x, breaks, label)
@@ -24,7 +31,7 @@ pHist <- function(x, breaks, label)
 
 pScatterMatrix <- function(data, columns)
 {
-    ggscatmat(data, columns = c(26,4,5,6), alpha = 0.5) +
+    ggscatmat(data, columns = columns, alpha = 0.5) +
     geom_smooth(method = 'lm', colour = '#dd4814') + theme_wsj()
 }
 

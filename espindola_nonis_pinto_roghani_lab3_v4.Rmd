@@ -49,6 +49,8 @@ import('tidyverse')
 import('RColorBrewer')
 import('ggthemes')
 import('stargazer')
+import('sandwich')
+import('car')
 import('lmtest')
 import('maps')
 import('formattable')
@@ -227,6 +229,8 @@ p2 <- pHist(log(crime$avgsen), breaks = 40, label = "Average Sentence (log)")
 
 plot_grid(p1, p2)
 ```
+
+We do notice that there are some spikes and gaps in the distribution of the Average Prison Sentences. This could possibly be explained by the determinant sentencing guideline that is in place in North Carolina, that mandates a fixed amount of time rather than a range of time.
 
 ```{r avgsen_trans}
 crime$avgsen.log <- log(crime$avgsen) # log transformation
@@ -408,37 +412,84 @@ $$
            & + \textbf{u}
 \end{aligned}
 $$
-
 ```{r m2}
-m2 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log, data = crime)
+m2 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log + mix.log, data = crime)
+coeftest(m2, vcov = vcovHC)
 ```
 
 ### Coefficients - M2
 
 While holding all other covariates and ubobserved factors fixed:
 
-- $\beta_0$ : `intercept`  is `r coef(m2)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients
-- $\beta_1$ : `prbarr`     is `r coef(m2)[2]`, we could predict that for every 0.01 increase in probability of arrest, crime rate will go down by approximately 2.35%
-- $\beta_2$ : `prbconv`    is `r coef(m2)[3]`, we could predict that for every 0.01 increase in probability of conviction, crime rate will go down by approximately 0.73%
-- $\beta_3$ : `prbpris`    is `r coef(m2)[4]`, we could predict that for every 0.01 increase in probability of prison is associated with a 0.39% increase in crime rate
-- $\beta_4$ : `polpc.log`  is `r coef(m2)[5]`, we could predict that for every   1% increase in police per capita is associated with a 0.62% increase in crime rate
-- $\beta_5$ : `avgsen.log` is `r coef(m2)[6]`, we could predict that for every   1% increase in avg. prison sentence, crime rate will go down by approximately 0.065%
+- $\beta_0$ : `intercept`  is `r coef(m2)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients. The t-stat and p-value on the intercept indicate that it is not statistically significant.
+- $\beta_1$ : `prbarr`     is `r coef(m2)[2]`, meaning a unit increase in probability of arrest is associated with 2.45% decline in crime rate. The t-stat and p-value on the coefficient indicate that it is statistically significant. The sign of the coefficient and its statistical significance are in line with our research hypothesis. 
+- $\beta_2$ : `prbconv`    is `r coef(m2)[3]`, meaning a unit increase in probability of conviction is associated with 0.7% decline in crime rate. The t-stat and p-value on the coefficient indicate that it is statistically significant. The sign of the coefficient and its statistical significance are in line with our research hypothesis. 
+- $\beta_3$ : `prbpris`    is `r coef(m2)[4]`, meaning a unit increase in probability of prison is associated with a 0.28% increase in crime rate. Although, the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant, its sign is still counter-intuitive and not in line with our hypothesis.
+- $\beta_4$ : `avgsen.log` is `r coef(m2)[5]`, meaning 1% increase in avg. prison sentence is associated with 0.05% decline in crime rate. The sign of the coefficient is in line with our hypothesis; however, the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant.
+- $\beta_5$ : `polpc.log`  is `r coef(m2)[6]`, meaning 1% increase in police per capita is associated with a 0.62% increase in crime rate. The t-stat and p-value on the coefficient indicate that the coefficient is statistically significant; however, its sign is counter-intuitive (because you one couldn't imagine crime rate going up as a result of having more police on the streets) and not in line with our hypothesis. This might be due to the fact that wherever there is high crime rate, increasing the size of police force has been considered and implemented. Also, it might be because in places wherer there are more police, a higher number of crimesn are reported (i.e. fewer unreported crimes). 
+- $\beta_6$ : `polpc.log`  is `r coef(m2)[7]`, meaning 1% increase in police per capita is associated with a 0.62% increase in crime rate. The t-stat and p-value on the coefficient indicate that the coefficient is statistically significant; however, its sign is counter-intuitive (because you one couldn't imagine crime rate going up as a result of having more police on the streets) and not in line with our hypothesis. This might be due to the fact that wherever there is high crime rate, increasing the size of police force has been considered and implemented. Also, it might be because in places wherer there are more police, a higher number of crimesn are reported (i.e. fewer unreported crimes). 
 
 ### Goodness of Fit - M2
 
-* The R-squared value is <b>`r summary(m2)$r.squared`</b>, which means around 61% of the variation in crime rate could be explained by our model. Even though this is a higher number compared to our base model, it doesn’t necessarily show a better fit because when we add variables R-squared goes up anyway. Because of this we look at the AIC value to compare the two models in terms of goodness of fit.
-* The Akaike Information Criterion value is <b>`r AIC(m2)`</b>, which is lower than that of base model value `r AIC(m1)`. This confirms that the extended model is more accurate than the base model.
+```{r}
+summary(m2)$adj.r.squared
+AIC(m2)
+```
 
-### 6 CLM Assumptions - M2
+* The Adjusted R-squared value is <b>`r summary(m2)$adj.r.squared`</b>, which means around 58% of the variation in crime rate could be explained by our model. Since this is higher than the Adjusted R-squared for our base model(0.44), it means our extended model is a more accurate one. 
+* The Akaike Information Criterion value is <b>`r AIC(m2)`</b>, which is lower than that of base model value `r AIC(m1)`. Again, this confirms that the extended model is more accurate than the base model.
+
+### Six CLM Assumptions - M2, Summary
 
 1. Linearity: Our model is linear in parameters.
-2. IID Sampling: See our note for the base model. 
-3. Multicollinearity: We didn’t see any sign of perfect collinearity among our explanatory variables. In addition, R would warn users if such collinearity exists, which did not happen throughout our analysis.
-4. Zero Conditional Mean: We will cover that below.
-5. Homoskedasticity: See below.
-6. Normality: See below.
+2. iid Sampling: We don’t have sufficient insight into how the data have been collected. For example, we don’t know if the probability of arrest is calculated by dividing the number of all arrests by the number all crimes across counties in 1987, or from a sample. Another issue is that we don’t have data from some of counties and we are not sure how including additional data from those counties would affect our analysis. But since the data are collected by key government agencies and used for analysis by reputable researchers, we assume random sampling.
+3. Multicollinearity: We did not identify any sign of perfect collinearity among our explanatory variables looking at the correelations. In addition, R would warn users if such collinearity exists, which did not happen throughout our analysis. This is confirmed by the variance inflation factor (VIF) scores below.
+4. Zero Conditional Mean: The Residual vs. Fitted chart below confirms this assumption.
+5. Homoskedasticity: This assumption is confirmed as explained below. 
+6. Normality: Even though the histogram of residuals does not show any skewness, the Shapiro-Wilk normality test does not confirm this assumption. That said, given the sample size we can assume that the sampling distribution of coefficients is normal.
 
 ### Model Diagnostics - M2
+
+**Multicollinearity**  
+
+As seen below, the variance inflation factor (VIF) scores of our model coefficients are pretty, confirming the absence of collinearity. 
+
+```{r}
+vif(m2)
+```
+
+**Zero Conditional Mean**
+
+```{r m2_diagnostics_1, fig.align = 'center', fig.width = 9}
+#pModel(m2, title = "Model 2 Diagnostic Plots")
+plot(m2, which = 1)
+```
+
+<b>Residual vs Fitted</b>
+<br>
+The residual vs fitted spline is mostly flat, except for some curvature with a positive slope on the right side, deviating from zero, which  might be due to the fact that we don’t have enough data points. The chart shows that the distribution of residuals around the zero line are not dependent on indpendepnt variables, and thus confirms that MLR assumption of Zero Conditional Mean.  
+
+**Homoskedasticity**
+
+```{r m2_diagnostics_3, fig.align = 'center', fig.width = 9}
+#pModel(m2, title = "Model 2 Diagnostic Plots")
+plot(m2, which = 3)
+```
+
+<b>Scale-Location</b>
+<br>
+Despite the fact that points on the Scale-Location chart seem to spread out as we move to the right (which is mostly because we have more points on the right side side), there is no strong sign of heteroskedasticity.
+
+
+```{r}
+bptest(m2)
+```
+
+<b>Breusch-Pagan Test</b>
+<br>
+In order to evaluate the homoskedasticity assumption, we also used the the Breusch-Pagan test. Since the p-value <b>`r bptest(m2)$p.value`</b> is greater than 0.05, the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model (i.e. the variance of residuals are not dpenedent on the value of the fitted outcome variable).
+
+**Normality**
 
 ```{r m2_residuals, fig.align = 'center', fig.width = 9}
 pHist(m2$residuals, breaks = 20, label = "Residuals")
@@ -446,41 +497,49 @@ pHist(m2$residuals, breaks = 20, label = "Residuals")
 
 <b>Residuals Plot</b>
 </br>
-The histogram of residuals show a fairly normal distribution (especially compared with the same plot for base model) where the bulk of the data points are. However, we could see the extreme outlier on the left that creates some sort of negative skew in the distribution. 
+The histogram of residuals shows a fairly normal distribution where the bulk of the data points are. The small left-skew in  the histogram is caused by the extreme outlier on the left. 
 
-```{r m2_diagnostics, fig.align = 'center', fig.width = 9}
-pModel(m2, title = "Model 2 Diagnostic Plots")
+
+```{r m2_diagnostics_2, fig.align = 'center', fig.width = 9}
+#pModel(m2, title = "Model 2 Diagnostic Plots")
+plot(m2, which = 2)
 ```
 
-<b>Residual vs Fitted</b>
-<br>
-The residual vs fitted spline is much flatter than that of base model. However, it shows a curvature with positive slope on the right side, deviating from zero. This might be due to the fact that we don’t have enough data points.
 
 <b>Normal Q-Q</b>
 <br>
-Most points are on, or fairly close to the diagonal line. However, as in base model, we see some deviations towards the two extremes of the line. Thus, we will take additional steps to verify this assumption. 
+To check for the normality assumption, we also looked at the Normal Q-Q plot. Most points are on, or fairly close to the diagonal line. However, as in base model, we see some deviations towards the two extremes of the line. Thus, we will take additional steps to verify this assumption. 
 
-<b>Scale-Location</b>
-<br>
-Despite the fact that points on chart seem to spread out as we move to the right, there is not strong sign of heteroskedasticity, since we have very few points on the left side.
-
-<b>Residuals vs Leverage</b>
-<br>
-As in the base model, the residual from observation row 51 (county 115), has a high influence on our model. But in model 2, its Cook’s distance is much lower than what we saw in the base model.
-
-<b>Breusch-Pagan Test</b>
-<br>
-In order to evaluate CLM assumption 5 `homoskedasticity` the Breusch-Pagan test was used. As the result p-value <b>`r bptest(m2)$p.value`</b> was greater than 0.05 the null hypothesis (absence of heteroskedasticity) can not be rejected. In other words there is no heteroskedasticity in our model.
+```{r}
+shapiro.test(m2$residuals)
+```
 
 <b>Shapiro-Wilk Test</b>
 <br>
-In order to evaluate CLM assumption 6 `normality` the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m2$residuals)$p.value`</b> is smaller than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can be rejected. That said, given the sample size of >30 we can assume that the sampling distribution of our coefficients is normal, so assumption 6 (normality) still holds in our model.
+In order to further evaluate normality assumption, the Shapiro-Wilk test was used. As the result p-value <b>`r shapiro.test(m2$residuals)$p.value`</b> is smaller than 0.05 the null hypothesis (that residuals are drawn from a population with normal distribution) can be rejected. That said, given the sample size of >30 we can assume that the sampling distribution of our coefficients is normal, so assumption 6 (normality) still holds in our model.
+
+**High Leverage Points**
+
+```{r m2_diagnostics, fig.align = 'center', fig.width = 9}
+#pModel(m2, title = "Model 2 Diagnostic Plots")
+plot(m2, which = 5)
+```
+
+<b>Residuals vs Leverage</b>
+<br>
+As in the base model, the residual from observation row 51 (county 115), has an influence on our model by pulling down the line. But in model 2, its Cook’s distance is much lower than what we saw in the base model (<0,5), so it is not considered high leverege point.
+
 
 ### Interpretation and Conclusion - M2
 
-As shown in the analysis above, our second model confirms what we found in our base model: increases in probability of arrest and probability of conviction could potentially lower crime rate. In other words, a policy focused on more stringent arrest protocols and stricter criminal sentencing could be proposed by the political campaign. Moreover, an increase in avg. prison sentence could lead to lower crime rate as explained above. This is another recommendation we plan to provide to the political campaign, a policy for longer prison time. 
+As shown in the analysis above, our second model confirms what we found in our base model: increases in probability of arrest and probability of conviction are associated with lower crime rate. In other words, a policy focused on more stringent arrest protocols and stricter criminal sentencing could be proposed by the political campaign. 
 
-As in the base model, the probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. Also, in model 2, we found that increase in police per capita is associated with higher crime rate. We believe that the relationships we observed might be due to the fact that the prison to conviction ratio and police per capita are already high in areas where crime rate is high. As stated before, for a more effective assessment of this situation, we would have to have data to see the trends in crime rate before and after changes in prison/conviction ratio and police per capita where they are implemented. 
+Even though an increase in avg. prison sentence is associated with lower crime rate, its coefficient is not statistically significant. This might be due to the fact that avg. prison sentece is pretty low across North Carolina (with maximuim of around 20 days), which is unusual, since most prison sentences are at least a few months. Therefore, it is worth further evaluating this matter in the state, which is going to be part of our recommendation to the political campaign.
+
+As in the base model, the probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. Also, in model 2, we found that increase in police per capita is associated with higher crime rate. We believe that the relationships we observed might be due to the fact that the prison to conviction ratio and police per capita are already high in areas where crime rate is high. For a more effective assessment of this situation, we would have to have data to see the trends in crime rate before and after changes in prison/conviction ratio and police per capita where they are implemented. 
+
+> [to add: interpretation of `mix` and its impact on model coefficients compared to base model]
+
 
 ## Kitchen-sink Model
 
@@ -510,6 +569,7 @@ $$
 
 ```{r m3}
 m3 <- lm(crmrte.log ~ prbarr + prbconv + prbpris + avgsen.log + polpc.log +  mix.log + log(density) + taxpc  + pctmin80 + pctymle + log(wcon) + log(wtuc) + log(wtrd) + log(wfir) + log(wser) + log(wmfg)  + log(wloc), data = crime)
+coefficients(m3)
 ```
 
 ### CLM Assumptions - M3
