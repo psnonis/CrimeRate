@@ -74,7 +74,6 @@ sBuild <- function(dat,out){
             Min      = round(  min(x), 2), Max       = round(    max(x), 2),
             SD       = round(   sd(x), 2),
             Spread   = list(x),
-            Scatter  = list(x),
             Histogram = list(hist(x, plot = F)$counts))
     })))
 }
