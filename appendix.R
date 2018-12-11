@@ -7,12 +7,18 @@ pModel <- function(m, title)
           plot.background = element_rect(fill = "#f8f2e4"))
 }
 
-pDiagnostics <- function(m, which)
+pDiagnostics_ <- function(m, which)
 {
     par(mfrow = c(1, 1))
     autoplot(m, which = which, ncol = 1, smooth.colour = "#dd4814", smooth.size = 1, alpha = 0.8, size = 2) +
         theme(title = element_text(size = 10, face = 'bold', family = 'sans'),
               plot.background = element_rect(fill = "#f8f2e4"))
+}
+
+pDiagnostics <- function(m, which)
+{
+    par(mfrow = c(1, 1), bg = "#f8f2e4", mar = c(4,4,2,2) + 0.1)
+    plot(m, which = which, col = rgb(0,0,0, 0.5), pch = 19, lwd = 2)
 }
 
 pHist <- function(x, breaks, label)
@@ -25,7 +31,7 @@ pHist <- function(x, breaks, label)
     stat_function(aes(x = x), fun = dnorm, colour = '#dd4814',
                   size = 1.5, args = list(mean = mean(x), sd = sd(x))) +
     ggtitle(label) + theme_wsj() +
-    theme(title = element_text( size = 10, face = 'bold', family = 'sans'),
+    theme(title = element_text(size = 10, face = 'bold', family = 'sans'),
           plot.background = element_rect(fill = "#f8f2e4"))
 }
 
@@ -53,6 +59,7 @@ mSetup <- function()
 
 mMapNC <- function(column, title)
 {
+    par(bg = "#f8f2e4")
     ggplot(data = ncmap,
            mapping = aes_string(x = 'long', y = 'lat', group = 'group', fill = column)) +
     geom_polygon(color = 'black', size = 0.025) +
@@ -93,6 +100,79 @@ sTable <- function(tab){
                                   knit(text = sprintf('`r sparkline(c(%s), type="bar")`',
                                                       paste0(zz, collapse = ',')), quiet = T)})}
     ))
+}
+
+bKable <- function(b)
+{
+    colnames(b) <- c("Regressor",
+                     "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$","$\\beta_5$","$\\beta_6$","$\\beta_7$",
+                     "$\\gamma_1$", "Direction of Bias", "Bias wrt Zero")
+    kable(b, escape = FALSE)
+}
+
+bTable1 <- function()
+{
+    bKable(data.frame(
+        c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
+        c("negative","-","-","-","-","-"),
+        c("-","negative","-","-","-","-"),
+        c("-","-","positive","-","-","-"),
+        c("-","-","-","positive","-","-"),
+        c("-","-","-","-","positive","-"),
+        c("-","-","-","-","-","positive"),
+        c("positive","positive","positive","positive","positive", "positive"),
+        c("negative","negative","negative","negative","close to zero","positive"),
+        c("negative","negative","negative","negative","close to zero","positive"),
+        c("away from zero","away from zero", "towards zero", "towards zero","close to zero bias","away from zero")))
+
+}
+
+bTable2 <- function()
+{
+    bKable(data.frame(
+        c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
+        c("negative","-","-","-","-","-"),
+        c("-","negative","-","-","-","-"),
+        c("-","-","positive","-","-","-"),
+        c("-","-","-","positive","-","-"),
+        c("-","-","-","-","positive","-"),
+        c("-","-","-","-","-","positive"),
+        c("negative","negative","negative","negative","negative", "negative"),
+        c("negative","negative","negative","negative","close to zero","close to zero"),
+        c("positive","positive","positive","positive","close to zero","close to zero"),
+        c("towards zero","towards zero", "away from zero", "away from zero","close to zero bias","close to zero bias")))
+}
+
+bTable3 <- function()
+{
+    bKable(data.frame(
+        c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
+        c("negative","-","-","-","-","-"),
+        c("-","negative","-","-","-","-"),
+        c("-","-","positive","-","-","-"),
+        c("-","-","-","positive","-","-"),
+        c("-","-","-","-","positive","-"),
+        c("-","-","-","-","-","positive"),
+        c("positive","positive","positive","positive","positive", "positive"),
+        c("positive","positive","positive","positive","close to zero","close to zero"),
+        c("positive","positive","positive","positive","close to zero","close to zero"),
+        c("towards zero","towards zero", "away from zero", "away from zero","close to zero bias","close to zero bias")))
+}
+
+bTable4 <- function()
+{
+    bKable(data.frame(
+        c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
+        c("negative","-","-","-","-","-"),
+        c("-","negative","-","-","-","-"),
+        c("-","-","positive","-","-","-"),
+        c("-","-","-","positive","-","-"),
+        c("-","-","-","-","positive","-"),
+        c("-","-","-","-","-","positive"),
+        c("positive","positive","positive","positive","positive", "positive"),
+        c("positive","positive","positive","positive","close to zero","positive"),
+        c("positive","positive","positive","positive","close to zero","positive"),
+        c("towards zero","towards zero", "away from zero", "away from zero","close to zero bias","away from zero")))
 }
 
 import <- function(package)
