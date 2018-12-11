@@ -14,6 +14,7 @@ output:
 <style>
     body {text-align: justify}
     mark {font-weight: bold; color: black; background-color: rgba(255, 255, 0, 0.4); border-radius:6px;padding: 0 4px}
+    table {width:100%}
     table > tbody > tr > td {color: black; text-align: right; font-family: consolas;}
     .table > tbody > tr:nth-child(odd) > td {background-color: #ffccbc; color: black;}
     th {background-color:#dd4814;color: white;}
@@ -332,7 +333,7 @@ While holding all other covariates and unobserved factors fixed:
 
 It is worth noting that the coefficients for `prbarr` and `prbconv` amplify the effect of increasing `prbarr` or `prbconv`. This is not true for the coefficients for `prbpris` and `avgsen.log`.
 
-Another point worth noting is that, while `prbarr` and `prbconv` behave as we expected, `prbpris` and `avgsen.log` don't: an increase in those variables is associated with an increase in crime rates, the opposite of the effect we expected.
+Another point worth noting is that, while the sign of coefficients of `prbarr` and `prbconv` are negative,the positive coefficient signs of `prbpris` and `avgsen.log` are contradictory to our hypothesis. An increase in those variables is associated with an increase in crime rates, the opposite of the effect we expected.
 
 On the statistical significance, we can only reject the null hypothesis that the true coefficients for Probability of Arrest and Probability of Conviction in the population model are zero. There is not enough evidence however, to support that the coefficients of Probability of Prison and Log(Average Sentence) are not zero.
 
@@ -498,15 +499,14 @@ Even though an increase in avg. prison sentence is associated with lower crime r
 
 As in the base model, the probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. Also, in model 2, we found that increase in police per capita is associated with higher crime rate. We believe that the relationships we observed might be due to the fact that the prison to conviction ratio and police per capita are already high in areas where crime rate is high. For a more effective assessment of this situation, we would have to have data to see the trends in crime rate before and after changes in prison/conviction ratio and police per capita where they are implemented. 
 
-> [to add: interpretation of `mix` and its impact on model coefficients compared to base model]
+Even though the coefficient for offense mix variable is not significant, we believe that the addition of this variable has improved our model. Specifically, the standard error for `prbarr` coefficient has decreased and it p-value is much smaller than what we observed in the base model. Also, the sign for coefficient of `avgsen.log` has turned from positive to negative in the extended model, which is in line with our research hypothesis. 
 
 # Kitchen-sink Model
 
 ## Model Specification
 
-The key purpose of this model is to demonstrate the robustness of our previous results to different model specifications. That means, to make sure that our conclusions are plausible.
-For the third model, we define a specification with almost all variables in the dataset. In particular, we are interested in the inclusion of demographics and socio-economic variables that  might 
-extract unobserved factors from the error term. 
+The key purpose of this model is to demonstrate the robustness of results from our previous model specifications, which will help ensure our conclusions are plausible.
+For the third model, we define a specification with almost all variables in the dataset. In particular, we are interested in the inclusion of demographics and socio-economic variables that  might diminish the effect of unobserved factors previously in the error term. 
 
 <b>Explained Variable</b>
 
@@ -516,7 +516,7 @@ The explained variable (crime rate) remains identical as in previous models.
 
 We are keeping the same regressors as in model 2, and we are adding the following: density, tax revenue per capita, percent of minorities (based on 1980 data), percent of young male, weekly wages for different industries and weekly wages for local government employees. Based on the result of model 3, we could determine whether these variables are associated with crime rate, in a positive or negative way. 
 
-For all wages variables we take a log transformation to interpret the coefficients in percent changes and not in absolute values.
+For all wages variables we are performing log transformation to interpret the coefficients in percent changes and not in absolute values.
 
 With this third specification, we do not expect to obtain the most <b>parsimonious model</b> that describes our population, and we expect it to possibly be an <b>overfitting model</b>.
 
@@ -556,7 +556,7 @@ We will evaluate the statistical significance of the model and use it to test th
 
 3. <b>No Perfect Multicollinearity</b><br>
     
-    R would warn users if such collinearity exists, which did not happen throughout our analysis. To further assess collinearity, we applied the vif test to our model, the results show that none of the regressors is closely predicted from the other regressors.
+    R warns users if such collinearity exists, which did not happen throughout our analysis. To further assess collinearity, we applied the vif test to our model, the results show that none of the regressors has perfect collinearity with other regressors. The low vif scores of coefficients, seen below, confirms this assumption
     
     ```{r m3_vif}
     vif(m3)
@@ -564,7 +564,7 @@ We will evaluate the statistical significance of the model and use it to test th
 
 4. <b>Zero Conditional Mean</b><br>
     
-    We visually diagnosed this assumption using the residuals vs. fitted values plot. We observed that the residuals bounce randomly around the zero line. We also observed that the red line (which is a scatterplot smoother, showing the average value of the residuals at each value of fitted values) is almost flat, with the exception of the right extreme, but this is due to the presence of just one observation at that level.  We conclude that there is no violation of this assumption, meaning that our parameters are unbiased (assuming that all the conditions for i.i.d Sampling are met).
+    We are assessing this assumption using the Residuals vs. Fitted plot. We observed that the residuals bounce randomly around the zero line. We also observed that the red line (which is a scatterplot smoother, showing the average value of the residuals at each value of fitted values) is almost flat, with the exception of the right extreme, but this is due to the presence of just one observation at that level.  We conclude that there is no violation of this assumption, meaning that our parameters are unbiased (assuming that all the conditions for i.i.d Sampling are met).
     
     ```{r m3_diagnostics_1, fig.height = 3}
     pDiagnostics(m3, which = 1)
@@ -572,7 +572,7 @@ We will evaluate the statistical significance of the model and use it to test th
 
 5. <b>Homoskedasticity</b><br>
     
-    We examined the Scale-Location plot (see below). This plot does not completely allow us to discard heteroskedasticity, as we observe that the thickness of the band is not even, meaning that the variance of the error might not be constant. We ran the Breusch-Pagan test to confirm the presence of heteroskedasticity. The null-hypothesis for this test is absence of heteroskedasticity.  The p-value we obtained is  <b>`r bptest(m3)$p.value`</b>, meaning that we can  not reject the null-hypothesis.  However, we will proceed with robust standard errors to be more conservative.
+    We examined the Scale-Location plot (see below). This plot does not completely allow us to discard heteroskedasticity, as we observe that the spread of the points is not even, meaning that the variance of the error might not be constant. We ran the Breusch-Pagan test to confirm the presence of heteroskedasticity.  The p-value we obtained is  <b>`r bptest(m3)$p.value`</b>, meaning that we can  not reject the null-hypothesis of absence of heteroskedasticity.  However, we will proceed with robust standard errors to be more conservative.
     
     ```{r m3_diagnostics_3, fig.height = 3}
     pDiagnostics(m3, which = 3)
@@ -589,7 +589,7 @@ We will evaluate the statistical significance of the model and use it to test th
     pHist(m3$residuals, breaks = 20, label = "Residuals")
     ```
     
-    The plot shows a fairly normal distribution. However, we can observe a slight leftward skew. We also examined the Normal Q-Q plot. It shows that the majority of observations are aligned with the diagonal line, however, we can also see deviations from the diagonal line on the two extremes of the chart. Therefore, we ran the formal Shapiro-Wilk test of normality. The p-value of <b>`r shapiro.test(m3$residuals)$p.value`</b> is smaller than 0.05, meaning that we can reject the null hypothesis (normality). However, our sample size is 90, therefore we will rely on the Central Limit Theorem to assume normality.
+    The plot shows a fairly normal distribution. However, we can observe a slight negative skew. We also examined the Normal Q-Q plot which shows that the majority of observations are aligned with the diagonal line, however, we can see deviations from the diagonal line on the two extremes of the line. Therefore, we ran the formal Shapiro-Wilk test of normality. The p-value of <b>`r shapiro.test(m3$residuals)$p.value`</b> is smaller than 0.05, meaning that we can reject the null hypothesis (normality). However, our sample size is 90, therefore we will rely on the Central Limit Theorem to assume normality.
     
     ```{r m3_diagnostics_2, fig.height = 3}
     pDiagnostics(m3, which = 2)
@@ -600,7 +600,7 @@ We will evaluate the statistical significance of the model and use it to test th
 
 <b>Additional Model Diagnostics</b>
 
-In order to identify potential high leverage or influence points, we looked at the Residuals vs Leverage plot. There are four observations with high leverage, and one of them also has a high residual, however, their Cook’s distance are smaller than or at 0.5, so we are not concerned about these points influencing our model.
+In order to identify potential high leverage or influence points, we looked at the Residuals vs. Leverage plot. There are four observations with high leverage, and one of them also has a high residual, however, their Cook’s distance are smaller than or at 0.5, so we are not concerned about these points influencing our model.
 
 ```{r m3_diagnostics_5, fig.height = 3}
 pDiagnostics(m3, which = 5)
@@ -620,7 +620,7 @@ We notice that only prbarr, prbconv, polpc.log, density and pctmin80 are statist
 - $\beta_1$  : `prbarr`        is `r coef(m3)[ 2]`, every 1% increase in probability of arrest     is associated with a `r coef(m3)[ 2]`% decrease in crime rate
 - $\beta_2$  : `prbconv`       is `r coef(m3)[ 3]`, every 1% increase in probability of conviction is associated with a `r coef(m3)[ 3]`% decrease in crime rate
 - $\beta_5$  : `polpc.log`     is `r coef(m3)[ 6]`, every 1% increase in police per capita         is associated with a `r coef(m3)[ 6]`% increase in crime rate
-- $\beta_7$  : `density`       is `r coef(m3)[ 8]`, 100 more people added per square mile is associated with a `r coef(m3)[ 8]`% increase in crime rate
+- $\beta_7$  : `density`       is `r coef(m3)[ 8]`, every 100 additional people per square mile is associated with a `r coef(m3)[ 8]`% increase in crime rate
 - $\beta_9$  : `pctmin80`      is `r coef(m3)[10]`, every 1% increase in percent minority          is associated with a `r coef(m3)[10]`% increase in crime rate
 
 <b>Goodness of Fit</b>
@@ -629,26 +629,50 @@ We notice that only prbarr, prbconv, polpc.log, density and pctmin80 are statist
 * The adjusted R-squared value is <b>`r summary(m3)$adj.r.squared`</b> , however, we do not know if another specification model with less variables than the third model could have a higher adjusted R2.
 * Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m2)`. 
 
-The values r-squared and r-squared adjusted are very high, this specification is probably an overfit model, too complicated for our data set and with too many regressors for our number of observations.
+The values r-squared and r-squared adjusted are very high, this specification is probably an overfit model, too complicated for our dataset and with too many regressors for our number of observations.
 
 ## Research Interpretation
 
 The main goal of running this third specification was to assess the robustness of our conclusions for model 2, we notice that:
 *The coefficients of prbarr, prbconv and polpc.log are statistically significant, as in model 2. The coefficients for prbarr and prbconv have changed and the variation in crime rate associated with a variation in these regressors has been reduced.  The coefficients do show sensitivity to the change in the specification, but still show relevance. This confirms our conclusion that certainty of punishment is associated with crime rate.
 *The coefficients of prbpris and time served in prison (avgsen.log) are not statistically significant, as in model 2. This confirms our conclusion that severity of punishment is not associated with crime rate.
-*The coefficient for density is statistically significant. Is the reduction in the coefficients for probability of arrest and probability of conviction due because density is also accounting for the certainty of being punished? 
-*The coefficient for pctmin80 is statistically significant, increased percent of minorities is associated with an increase in crime rate. We do not have enough domain knowledge but could speculate that poverty, discrimination, lack of opportunities etc, might play a role. In the context of our research question, is the certainty of punishment mitigated for this population group because of their socio-economic factors?
+*The coefficient for density is statistically significant. Is the reduction in the coefficients for probability of arrest and probability of conviction due to the fact that density is also accounting for the certainty of being punished? 
+*The coefficient for pctmin80 is statistically significant, meaning the increase in percent of minorities is associated with an increase in crime rate. We do not have enough domain knowledge but could speculate that poverty, discrimination, lack of opportunities etc, might play a role. In the context of our research question, is the certainty of punishment mitigated for this population group because of their socio-economic factors?
 
 # Regression Table
 
 ```{r regression, results = "asis"}
-stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Crime Rate",
-          column.labels = c("M1", "M2", "M3"),
-          keep.stat = c("rsq", "n"), omit.table.layout = "n",
-          dep.var.labels = c("Crime Rate per Capita"), ci = T)
+m1.se = sqrt(diag(vcovHC(m1)))
+m2.se = sqrt(diag(vcovHC(m2)))
+m3.se = sqrt(diag(vcovHC(m3)))
+
+stargazer(m1, m2, m3, type = "html", omit.stat = "f", title = "Linear Models of Crime Rate",
+          column.labels = c("M1", "M2", "M3"), dep.var.labels = c("Crime Rate per Capita"),
+          se = list(m1.se, m2.se, m3.se), star.cutoffs = c(0.05, 0.01, 0.001), digits = 2,
+          single.row = T, intercept.bottom = F)
 ```
 
-[TODO:we should address changes across models as well as practical significance of coefficients]
+
+
+## Practical Significance of Coefficients
+
+Here we explain the practical significance of coefficients with in the extended model and others in the kitchen-sink model that are not in extended model, with a focus on variables that are statistically significant and relevant to our research question. We will explain in our Conclusion that we believe the extended model is our preferred model, compared with the other two.
+
+- `prbarr`: The coefficient of this variable in our extended model is -2.4, meaning a unit increase in probability of arrest is associated with 2.45% decline in crime rate. This coefficient is practically significant. For example, if we assume a probability of prison of 30% (`prbarr` mean) is calculated in high-crime county with 100,000 crimes, the number of arrests should be 30,0000. Then a nunit increase in `prbarr` (1%) means that only 1,000 additional arrests is associated with 2.4% decline in crime, which is a significant amount.
+- `prbconv`: The coefficient of this variable in our extended model is -0.7, meaning meaning a unit increase in probability of arrest is associated with 0.7% decline in crime rate. We believe this is practically significant. For example, if we assume a probability of conviction to crime of 55%  (`prbarr`) is calculated by calculated in a county with 10,000 convictions, the number of prison sentences should be 5,500. This means a an increase of only 55 in number of prison sentences is associated with 0.7% in decline in crime. As a potential policy measure, this sounds to be easily achievable.
+- `polpc.log`: Even though the coefficient of this variable is statistically significant, it does not make sense interpret the practical significance of the coefficient. The positive sign of the coefficient is counterintuitive, which might be due to reasons explained above for the extended model coefficients.
+- `density`: The coefficient of this variable in our extended model is 0.08, meaning a unit increase in probability of arrest is associated with 0.8% increase in crime rate. It does not make sense interpret the practical significance of the coefficient, since this is no
+ 
+
+The practical significance this coefficient is relative and depends on the size of numerator and denominator in the arrest to crime ratio. For instance if a probability of arrest
+
+- $\beta_0$ : `intercept`   is `r coef(m2)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients. The t-stat and p-value on the intercept indicate that it is not statistically significant.
+- $\beta_1$ : `prbarr`     is `r coef(m2)[2]`, meaning a unit increase in probability of arrest is associated with 2.45% decline in crime rate. The t-stat and p-value on the coefficient indicate that it is statistically significant. The sign of the coefficient and its statistical significance are in line with our research hypothesis. 
+- $\beta_2$ : `prbconv`    is `r coef(m2)[3]`, meaning a unit increase in probability of conviction is associated with 0.7% decline in crime rate. The t-stat and p-value on the coefficient indicate that it is statistically significant. The sign of the coefficient and its statistical significance are in line with our research hypothesis. 
+- $\beta_3$ : `prbpris`    is `r coef(m2)[4]`, meaning a unit increase in probability of prison is associated with a 0.28% increase in crime rate. Although, the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant, its sign is still counter-intuitive and not in line with our hypothesis.
+- $\beta_4$ : `avgsen.log` is `r coef(m2)[5]`, meaning 1% increase in avg. prison sentence is associated with 0.05% decline in crime rate. The sign of the coefficient is in line with our hypothesis; however, the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant.
+- $\beta_5$ : `polpc.log`  is `r coef(m2)[6]`, meaning 1% increase in police per capita is associated with a 0.62% increase in crime rate. The t-stat and p-value on the coefficient indicate that the coefficient is statistically significant; however, its sign is counter-intuitive (because you one couldn't imagine crime rate going up as a result of having more police on the streets) and not in line with our hypothesis. This might be due to the fact that wherever there is high crime rate, increasing the size of police force has been considered and implemented. Also, it might be because in places where there are more police, a higher number of crimes are reported (i.e. fewer unreported crimes). 
+- $\beta_6$ : `mix.log`  is `r coef(m2)[7]`, meaning 1% increase in offense mix ratio is associated with a 0.62% increase in crime rate. The t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant.
 
 # Omitted Variable Analysis
 
@@ -691,7 +715,7 @@ bTable4()
 
 We started this study with the following research question: <b>Could increasing the certainty and the severity of punishment reduce the crime rate?</b>
 
-The main conclusion we can take away from our analysis is that certainty of punishment is associated, however, there is not enough evidence to claim whether severity of punishment is or is not.
+<mark>The main conclusion we can take away from our analysis is that certainty of punishment is associated, however, there is not enough evidence to claim whether severity of punishment is or is not.</mark>
 
 The goal of this study is to provide actionable insights to the political campaign towards reducing crime rate. Our analysis is not a causal model, because we can’t measure (or even identify) all variables that might cause crime rate, and these omitted variables might affect the results of our conclusions. Furthermore, we do not have data from subsequent years after implementing a crime policy change to causally confirm the effect.
 
@@ -725,6 +749,10 @@ It is evident in the third model the association of percent of minorities with c
 * The data set does not discriminate among crime types. We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft). This could lead to more interesting findings on the specific effects of the predictor variables per type of crime.
 * The data set only includes data for the year 1987. We think that this sample could be biased. We would need to expand this research with more years.
 * Adding data on specific percent of minorities sub-groups, such as school dropouts, teenager parenting, substance abuse, could provide more actionable insights to design specific outreach programs.
+
+To add (Payman):
+Casual relationship requires experiment and our model is not aimed for identifying causality
+Normal sampling possible violations
 
 # Appendix
 
