@@ -335,9 +335,6 @@ Another point worth noting is that, while the sign of coefficients of `prbarr` a
 
 On the statistical significance, we can only reject the null hypothesis that the true coefficients for Probability of Arrest and Probability of Conviction in the population model are zero. There is not enough evidence however, to support that the coefficients of Probability of Prison and Log(Average Sentence) are not zero.
 
-<TODO:Placeholder for practical significance>
-
-
 <b>Goodness of Fit</b>
 
 * The R-squared value for the base model is <b>`r summary(m1)$r.squared`</b>, which means around `r summary(m1)$r.squared*100`% of the variation in crime rate could be explained by our model.
@@ -640,24 +637,19 @@ The main goal of running this third specification was to assess the robustness o
 # Regression Table
 
 ```{r regression, results = "asis"}
-m1.se <- sqrt(diag(vcovHC(m1)))
-m2.se <- sqrt(diag(vcovHC(m2)))
-m3.se <- sqrt(diag(vcovHC(m3)))
+m1.se  <- sqrt(diag(vcovHC(m1))) # heteroskedasticity consistent standard errors
+m2.se  <- sqrt(diag(vcovHC(m2))) # heteroskedasticity consistent standard errors
+m3.se  <- sqrt(diag(vcovHC(m3))) # heteroskedasticity consistent standard errors
 
-m1.fs <- round(waldtest(m1)$F[2], 2)
-m2.fs <- round(waldtest(m2)$F[2], 2)
-m3.fs <- round(waldtest(m3)$F[2], 2)
-
-m1.fr <- round(waldtest(m1, vcov = vcovHC(m1))$F[2], 2)
-m2.fr <- round(waldtest(m2, vcov = vcovHC(m2))$F[2], 2)
-m3.fr <- round(waldtest(m3, vcov = vcovHC(m3))$F[2], 2)
+m1.aic <- round(AIC(m1), 2)
+m2.aic <- round(AIC(m2), 2)
+m3.aic <- round(AIC(m3), 2)
 
 stargazer(m1, m2, m3, type = "html", title = "Linear Models of Crime Rate",
           column.labels = c("M1", "M2", "M3"), dep.var.caption = "", dep.var.labels = c("Crime Rate per Capita"),
           se = list(m1.se, m2.se, m3.se), star.cutoffs = c(0.05, 0.01, 0.001), digits = 2,
-          single.row = T, intercept.bottom = F,
-          add.lines = list(c("F Statistic - Standard", m1.fs, m2.fs, m3.fs),
-                           c("F Statistic - HC Robust", m1.fr, m2.fr, m3.fr)))
+          single.row = T, intercept.bottom = F, omit.stat = c("rsq", "f"),
+          add.lines = list(c("AIC", m1.aic, m2.aic, m3.aic)))
 ```
 
 ## Practical Significance of Coefficients
