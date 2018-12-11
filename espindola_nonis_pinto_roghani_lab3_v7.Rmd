@@ -13,6 +13,7 @@ output:
 
 <style>
     body {text-align: justify}
+    mark {font-weight: bold; color: black; background-color: rgba(255, 255, 0, 0.4); border-radius:6px;padding: 0 4px}
     table > tbody > tr > td {color: black; text-align: right; font-family: consolas;}
     .table > tbody > tr:nth-child(odd) > td {background-color: #ffccbc; color: black;}
     th {background-color:#dd4814;color: white;}
@@ -102,7 +103,7 @@ From the 100 counties of North Carolina our dataset contains a sample of <b>90</
 mSetup(); mMapNC('crmrte', 'Crime Rate per Capita')
 ```
 
-The missing counties appear to be geographically clustered to the western and eastern sides of North Carolina, which gives us reason to suspect the sample quality in terms of randomness, with respect to geographical clustering.
+The missing counties appear to be geographically clustered to the western and eastern sides of North Carolina, which <mark>gives us reason to suspect the sample quality in terms of randomness, with respect to geographical clustering</mark>.
 
 ## Deeper Analysis
 
