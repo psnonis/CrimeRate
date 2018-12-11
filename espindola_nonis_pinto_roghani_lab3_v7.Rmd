@@ -1,5 +1,5 @@
 ---
-title: 'Is enhancing certainty and severity of punishment associated with reducing crime rate?'
+title: 'North Carolina Crime Rate Analysis'
 subtitle: 'MIDS W203, Fall 2018, Lab 3'
 author: 'Duda Espindola, Pri Nonis, Laura Pintos, Payman Roghani'
 output:
@@ -18,7 +18,6 @@ output:
     th {background-color:#dd4814;color: white;}
     #header,#TOC {text-align: left}
 </style>
-
 
 ```{r include}
 source('appendix.R')
@@ -52,7 +51,7 @@ The primary motivation of this report is to provide associative estimates for de
 
 ## Research Question
 
-Our research focuses on the following specific question: <b>Could increasing the certainty and the severity of punishment reduce the crime rate?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system is associated with crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using (1) Probability of Arrests, (2) Probability of Conviction, (3) Probability of Prison, and (4) Average Prison Sentence. The certainty of punishment will be measured based on the first three variables and the severity of punishment based on the fourth. Unfortunately, data for other forms of punishment is not available in our dataset and we will discuss their possible omitted bias on our model(s).
+Our research focuses on the following specific question: <b>Could increasing the certainty and the severity of punishment reduce the crime rate?</b> We explore how certainty of punishment and severity of punishment within the criminal justice system is associated with crime. As one of the key goals of the political campaign is to reduce the crime rate, the natural choice for the outcome variable of our study is the Crime Rate variable. We seek to explain the variability of this variable using (1) Probability of Arrests, (2) Probability of Conviction, (3) Probability of Prison, and (4) Average Prison Sentence. The certainty of punishment will be measured based on the first three variables and the severity of punishment based on the fourth. Unfortunately, data for other forms of punishment is not available in our dataset.
 
 $$
 \begin{aligned}
@@ -63,24 +62,24 @@ $$
 \end{aligned}
 $$
 
-We will primarily use these four explanatory variables as proxies to measure the effects of the the criminal justice system on crime and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and thus, will further explore their impact in our extended second OLS model. In the third OLS model we will add more variables to the model to gauge the robustness of our choices for regressors.
+We will primarily use these four explanatory variables as proxies to measure the effects of the the criminal justice system on crime and this relationship will be explored in our first OLS model. However, we expect other variables to have significant secondary effects on this relationship and thus, will further explore their impact in our extended second OLS model. In the third OLS model we will add more variables to the model to gauge the robustness of our chosen regressors.
 
 ## Policy Hypothesis
 
-The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the four explanatory variables, Probability of Arrest, Probability of Conviction, Probability of Prison, and Average Prison Sentence. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
+The null hypothesis assumes that the outcome Crime Rate variable is not impacted by the four explanatory variables: Probability of Arrest, Probability of Conviction, Probability of Prison, and Average Prison Sentence. We will test the following hypothesis through our detailed data analysis to justify our ultimate policy recommendation(s).
 
 + <b>Increasing arrest rates is associated with lower crime rate</b>
 + <b>Increasing conviction rates is associated with lower crime rate</b>
 + <b>Increasing prison verdicts is associated with lower crime rate</b>
 + <b>Increasing prison sentence is associated with lower rate</b>
 
-We will propose recommendations by finding robust, statistically significant, and practically significant regressors from our OLS models. We hope to either reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables or explain why our model may does not support such a conclusion.
+We will propose recommendations by finding robust, statistically significant, and practically significant regressors from our OLS models. We hope to either reject the null hypothesis by sufficiently explaining the variability of Crime Rate by our explanatory variables or explain why our model may not support such a conclusion.
 
 # Data Loading and Cleaning
 
-The primary data source for our study is **Cornwell and W. Trumball (1994), Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366**. We will use a single cross-section of data for **1987** from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
+The primary data source for our study is <b>Cornwell and W. Trumball (1994), Estimating the Economic Model of Crime with Panel Data, Review of Economics and Statistics 76, 360-366</b>. We will use a single cross-section of data for <b>1987</b> from the multi-year panel. (The authors used panel data methods and instrumental variables to control for some types of omitted variables)
 
-The dataset is provided for the year **1987** except for the **Percent Minority** (pctmin), which is provided for 1980.
+The dataset is provided for the year <b>1987</b> except for the <b>Percent Minority</b> (`pctmin`), which is provided for 1980.
 
 ## Basic Sanity Checks
 
@@ -97,13 +96,13 @@ crime$prbconv   <- as.numeric(as.character(crime$prbconv)) # (3) fix non-numeric
 dim(crime)
 ```
 
-From the 100 counties of North Carolina our data-set contain a sample of **90** counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset is shown in gray. The dataset contains **25** variables covering the following aspects. The **county** id is a subset of the U.S. Government's FIPS County Code, the full 5-digit code can be constructed by combining the North Carolina FIPS prefix 37 with the **county** id which are the last three digits. For example, 37001 is Almanance County which is the first observation from our dataset with county id of 1.
+From the 100 counties of North Carolina our dataset contains a sample of <b>90</b> counties. The map below shows the Crime Rate per Capita for the 90 observations; the 10 counties that are not present in the dataset are shown in gray. The dataset contains <b>25</b> variables covering the following aspects listed in the Variable Categories below. The <b>county</b> id is a subset of the U.S. Government's FIPS County Code, the full 5-digit code can be constructed by combining the North Carolina FIPS prefix 37 with the <b>county</b> id which are the last three digits. For example, 37001 is Almanance County which is the first observation from our dataset with county id of 1.
 
 ```{r crime_map}
 mSetup(); mMapNC('crmrte', 'Crime Rate per Capita')
 ```
 
-The missing counties appear to be geographically clustered to the western and eastern sides of North Carolina and gives reason to suspect the sample quality in terms of randomness, with respect to geographical clustering.
+The missing counties appear to be geographically clustered to the western and eastern sides of North Carolina, which gives us reason to suspect the sample quality in terms of randomness, with respect to geographical clustering.
 
 ## Deeper Analysis
 
@@ -143,13 +142,13 @@ The probability of conviction is proxied by the ratio between the number of conv
 
 ### Outliers Off by Order of Magnitude
 
-Another anomaly we observed, both by the histogram and by the summary statistics, is that for the density variable. There was a single value that is several orders of magnitude lower than other all other observations, with a density of 0.00002. We decided to investigate this further by using third party data sources.
+Another anomaly we observed, both by the histogram and by the summary statistics, is on the density variable. There was a single value that is several orders of magnitude lower than other all other observations, with a density of 0.00002. We decided to investigate this further by using third party data sources.
 
 ```{r density_check}
 crime$county[crime$density<0.0001]
 ```
 
-Searching for the FIPS code of this county (37173), we see that it is Swain County. When we search the data for Swain County in 1987 in the United States Census Bureau database, we see that the density was in fact 0.202. Further, analysis of the variable indicates that there is a code key error and the density data is in fact **100s of people per sq. mile** and not number of people per sq. mile as it is stated. We corrected the arithmetic error for Swain County's density to bring it in line with the other counties as shown below.
+Searching for the FIPS code of this county (37173), we see that it is Swain County. When we search the data for Swain County in 1987 in the United States Census Bureau database, we see that the density was in fact 0.202. Further, analysis of the variable indicates that there is a code key error and the density data is in fact <b>100s of people per sq. mile</b> and not number of people per sq. mile as it is stated. We corrected the arithmetic error for Swain County's density to bring it in line with the other counties as shown below.
 
 ```{r density_fix}
 crime$density[crime$county==173]<- crime$density[crime$county==173] * 10000
@@ -158,13 +157,13 @@ crime$density[crime$county==173]
 
 ### Other Significant Outliers
 
-For the Service Industry Weekly Wages, there is one value that stands out as is significantly larger than the next largest value.
+For the Service Industry Weekly Wages, there is one value that stands out as it is significantly larger than the next largest value.
 
 ```{r service_check}
 crime$county[crime$wser>2000]
 ```
 
-Searching for the FIPS code of this county (37185), we see that it is Warren County. Coincidently only the service sector wages appear to be inflated for this county compared to the average weekly wages of all sectors across North Carolina. It is very likely this value was incorrectly multiplied by 10, and the actual value is 217.7 instead of 2177.1. However, since we cannot confirm that with certainty, we will leave it unmodified and not discard the observation.
+Searching for the FIPS code of this county (37185), we see that it is Warren County. Strangely, only the service sector wages appear to be inflated for this county compared to the average weekly wages of all sectors across North Carolina. It is very likely this value was incorrectly multiplied by 10, and the actual value is 217.7 instead of 2177.1. However, since we cannot confirm that with certainty, we will leave it unmodified and keep the observation.
 
 # Base Model
 
@@ -183,13 +182,13 @@ p2 <- pHist(log(crime$crmrte), breaks = 20, label = "Crime Rate (log)")
 plot_grid(p1, p2)
 ```
 
-The crime rate histogram shows a significant positive skew in its distribution. Therefore, a log transformation of the variable allows the outlying data points, especially the outliers, to be pulled in closer to the bulk of the observations improving its normality.Such transformation is justified since crime rate can not take negative values. Furthermore, the transformation improves the interpretability of the model by allowing us to explain effects from the regressors on the regressand, in terms of percent change.
+The crime rate histogram shows a significant positive skew in its distribution. Therefore, a log transformation of the variable allows the outlying data points, especially the outliers, to be pulled in closer to the bulk of the observations improving its normality. Such transformation is justified since crime rate can not take negative values. Furthermore, the transformation improves the interpretability of the model by allowing us to explain effects from the regressors on the regressand in terms of percent change.
 
 ```{r crmrte_trans}
 crime$crmrte.log <- log(crime$crmrte) # log transformation
 ```
 
-There is an extreme outlier on the left tail of the data. Upon further investigation, we realize this is county 115 (observation 51), and this very low crime rate might be due to the very low density of the county (below the 1st quartile). For that, we don’t have a strong reason to believe it is an error or irrelevant to our model, and leave it as is.
+There is an extreme outlier on the left tail of the data. Upon further investigation, we realize this is county 115 (observation 51), and this very low crime rate might be due to the very low density in this county (below the 1st quartile). For that, we don’t have a strong reason to believe it is an error or irrelevant to our model, and leave it as is.
 
 <b>Explanatory Variables</b>
 
@@ -200,13 +199,11 @@ As discussed in the introduction, in order to test our hypothesis regarding the 
 - Probability of Prison: If the null hypothesis could be rejected, further evaluation and analysis could lead to a justified plan to aim for higher imprisonment rate, as one of the harshest types of criminal sentencing.
 - Average Prison Sentence: Defined as the average prison sentence in days. As explained, depending on certain conditions and further analysis, an actionable plan could be proposed to include decisive measures such as, longer average sentence times. Besides that, it is worth noting that average sentence values across all counties seem very low (mean = 9.689, SD = 2.8). It is not clear how average is calculated. If this is calculated as Average Sentence Days = Sum of all sentence terms/Total Number of Prisoners, this is an extremely low value. That said, in our analysis, we are performing a log transformation on this variable, as explained in next sections, which will enable us to address the changes in this variable as percentages, regardless of the variable unit, so its effect could be more easily reasoned in terms of a percent variation.
 
-Out decision regarding log transformation is based on the comparison of the two charts below. The histogram of `crmrate` shows a positive skew that is improved post-transformation. The distribution of log-transformed variable looks closer to normal. Since this variable can not take any negative value, the log transformation is justified.
+Our decision regarding log transformation is based on the comparison of the two charts below. The histogram of `avgsen` shows a positive skew that is improved post-transformation. The distribution of log-transformed variable looks closer to normal. Since this variable can not take any negative value, the log transformation is justified.
 
 ```{r avgsen_plot, fig.height = 3}
-crime$avgsen.log <- log(crime$avgsen) # log transformation
-
 p1 <- pHist(    crime$avgsen , breaks = 20, label = "Average Sentence"      )
-p2 <- pHist(log(crime$avgsen.log), breaks = 20, label = "Average Sentence (log)")
+p2 <- pHist(log(crime$avgsen), breaks = 20, label = "Average Sentence (log)")
 
 plot_grid(p1, p2)
 ```
@@ -217,14 +214,7 @@ We do notice that there are some spikes and gaps in the distribution of the Aver
 crime$avgsen.log <- log(crime$avgsen) # log transformation
 ```
 
-Looking at the summary statistics of the 4 variables, we don’t see any alarming issues. Also, histograms show a fairly normal distribution for all 4 variables. Although, there is one extreme outlier in `prbarr`, one in `prbconv` and one not so extreme in `avgsen.log`, which all relate to the same observation, county 115, we decided to keep them in our data because we don’t have any reason to believe that they are erroneous values, and might only be due to the low density of the county (below first quantile). Regarding `prbconv` we also have outliers on counties 185 and 195, and again, those might be due to extreme values of density: low for county 185 (below 1st quartile) and high for county 195 (above 3rd quartile). On the left side, we have an extreme outlier on the probability of prison variable, at county 173. However, county 173 has the lowest density in our dataset, and that low density could also be the explanation for such a low probability of prison. That said, we will evaluate the influence of these extreme points during or diagnostic analysis of regression models. 
-
-
-```{r outliers}
-crime[crime$prbpris < 0.2 | crime$prbarr>0.9 | crime$prbconv > 1.5,c(1,3,4,5,6,7,9,26,27)]
-summary(crime$density)
-```
-
+Looking at the summary statistics of the four variables, we don’t see any alarming issues. Also, histograms show a fairly normal distribution for all four variables. Although, there is one extreme outlier in `prbarr`, one in `prbconv` and one not so extreme in `avgsen.log`, which all relate to the same observation, county 115, we decided to keep them in our data because we don’t have any reason to believe that they are erroneous values or irrelevant to our research question.
 
 ```{r m1_explanatory_plot}
 p1 <- pHist(crime$prbarr,     breaks = 40, label = "Probability of Arrest"    )
@@ -357,9 +347,7 @@ On the statistical significance, we can only reject the null hypothesis that the
 
 ## Research Interpretation
 
-As evidenced by the coefficients of our base model, we can state that increases in probability of arrest and probability of conviction could potentially lower crime rate. In other words, a policy focused on more stringent arrest protocols and stricter criminal sentencing could be proposed by the political campaign.
-The probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. We don’t believe this relationship means that, for example, if we increase the probability of prison, the crime rate will go up. We think that this might be due to the fact that the prison to conviction ratio is already high in areas where crime rate is high. For a more effective assessment of such a relationship, we need to have data to observe the trends in crime rate before and after the prison to conviction rate goes up as a result of policy change, which is not currently included in our dataset, which is snapshot of 1987.  An additional possible explanation is that incarceration does not deter crime as it exposes the prisoners to an environment which could amplify their criminal behaviour when they finish their sentence. 
-The log of average sentence has a positive coefficient in our base model, meaning issuing higher sentence times on average is associated with higher crime rate. However, we don't believe this means that higher sentence times will drive the crime rate up. We understand this might be due to the nature of our dataset, focused in 1987 only. Maybe areas with higher crime rates simply naturally issued more sentences and higher sentence times, as a measure to inhibit crimes, however, the effect is yet to be noticed in the upcoming years.
+As evidenced by the coefficients of our base model, we can state that increases in probability of arrest and probability of conviction could potentially lower crime rate. In other words, a policy focused on more stringent arrest protocols and stricter criminal sentencing could be proposed by the political campaign.The probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. We don’t believe this relationship means that, for example, if we increase the probability of prison, the crime rate will go up. We think that this might be due to the fact that the prison to conviction ratio is already high in areas where crime rate is high. For a more effective assessment of such a relationship, we need to have data to observe the trends in crime rate before and after the prison to conviction rate goes up as a result of policy change, which is not currently included in our dataset, which is snapshot of 1987.  An additional possible explanation is that incarceration does not deter crime as it exposes the prisoners to an environment which could amplify their criminal behaviour when they finish their sentence. The log of average sentence has a positive coefficient in our base model, meaning issuing higher sentence times on average is associated with higher crime rate. However, we don't believe this means that higher sentence times will drive the crime rate up. We understand this might be due to the nature of our dataset, focused in 1987 only. Maybe areas with higher crime rates simply naturally issued more sentences and higher sentence times, as a measure to inhibit crimes, however, the effect is yet to be noticed in the upcoming years.
 
 # Extended Model
 
@@ -516,7 +504,8 @@ As in the base model, the probability of prison has a positive coefficient in ou
 ## Model Specification
 
 The key purpose of this model is to demonstrate the robustness of our previous results to different model specifications. That means, to make sure that our conclusions are plausible.
-For the third model, we define a specification with almost all variables in the dataset. In particular, we are interested in the inclusion of demographics and socio-economic variables that we assume might be related to crime rate and that would extract unobserved factors from the error term. 
+For the third model, we define a specification with almost all variables in the dataset. In particular, we are interested in the inclusion of demographics and socio-economic variables that  might 
+extract unobserved factors from the error term. 
 
 <b>Explained Variable</b>
 
@@ -665,7 +654,7 @@ stargazer(m1, m2, m3, type = "html", report = "vc", title = "Linear Models of Cr
 Besides the variables presented to us in the crime dataset, we understand there are other variables that might impact both our explanatory variables and output variable. In this section we will discuss the effects those variables might have on our model coefficients, theorizing whether their inclusion in the model would drive our coefficients away or closer to zero.
 
 
-## Illegal Guns per Capita (iguns)
+## Illegal Guns per Capita
 
 This variable aims to measure the ratio of the number of illegal guns to the population of the county. We expect that an increase in the number of illegal guns per person to be associated with a decrease in the probability of arrest, conviction, prison and the average sentence time, since they are harder to track to the owner, and therefore, provide enough evidence for making arrests, issuing convictions and convictions with prison time. Since the illegal purchase of a gun can be interpreted as a countermeasure to avoid future punishment, an increase on this variable can be interpreted as an increase in the intent to commit  crime, thus increasing the crime rates. Going with the same line of thought, an increase in this variable would be also associated with an increase on the mix variable, as crimes committed with guns are face-to-face crimes. However, we don't expect the variation in this variable to be associated with variations in police per capita.
 
@@ -699,16 +688,16 @@ bTable4()
 
 # Conclusion
 
-We started this study with the following research question: Could increasing certainty and severity of punishment associated with reducing crime rate?
+We started this study with the following research question: <b>Could increasing the certainty and the severity of punishment reduce the crime rate?</b>
 
-The main conclusion we can take away from our analysis is that certainty of punishment is associated, however, severity of punishment is not.
+The main conclusion we can take away from our analysis is that certainty of punishment is associated, however, there is not enough evidence to claim whether severity of punishment is or is not.
 
-The goal of the political campaign is to reduce crime rate. Our analysis is not a causal model, because we can’t measure (or even identify) all variables that might cause crime rate and these omitted variables might affect the results of our conclusions. Furthermore, we do not have data from subsequent years after implementing a crime policy change to causally confirm the effect.
+The goal of this study is to provide actionable insights to the political campaign towards reducing crime rate. Our analysis is not a causal model, because we can’t measure (or even identify) all variables that might cause crime rate, and these omitted variables might affect the results of our conclusions. Furthermore, we do not have data from subsequent years after implementing a crime policy change to causally confirm the effect.
 
 Having said that, the probability of being arrested and convicted are associated with a lower crime rate. Therefore, we advice the political campaign to design policies that increase these probabilities.
-The political campaign should design policies focused on increasing the certainty of punishment (do criminals expect to get caught and convicted). We think that this can be accomplished with a strategy of publicity campaigns focused on increasing the “perception” of getting caught and convicted.
+The political campaign should design policies focused on increasing the certainty of punishment (do criminals expect to get caught and convicted). We recommend a strategy of publicity campaigns focused on increasing the “perception” of getting caught and convicted.
 
-For example, investing in cameras/surveillance equipment that will be placed in hot spots in the counties, will probably conduct to more arrests (offenders identification) and convictions (the evidence will support the prosecutors cases). And therefore, the ratios used as probability proxies will increase. However, potential offenders do not check the proportion arrests to offenses when they go through the cost/benefit analysis of a criminal activity, they use their perception of being punished and probably rely on what has happened to relatives, acquaintances, etc that have conducted similar criminal activities. That is why we advise to develop publicity campaigns that should accompany each initiative. The campaigns will assure that a bigger segment of the population hears about the initiative and should have the effect to increase the perception of certainty of being punished, persuading the potential criminals to change their behaviour.
+For example, investing in cameras/surveillance equipment that will be placed in hot spots in the counties, will likely lead to more arrests (offenders identification) and convictions (the evidence will support the prosecutors cases). And therefore, the ratios used as probability proxies will increase. However, potential offenders do not check the proportion arrests to offenses when they go through the cost/benefit analysis of a criminal activity, they use their perception of being punished and probably rely on what has happened to relatives, acquaintances, etc that have conducted similar criminal activities. That is why we advise to develop publicity campaigns alongside each initiative. The campaigns will assure that a bigger segment of the population hears about the initiative and should have the effect to increase the perception of certainty of being punished, persuading the potential criminals to change their behaviour.
 
 According to the results of our research, campaign focused more on the risk of apprehension and conviction, results of past police operations/crackdowns, etc, would have a better crime deterrent effect than informing of law changes that increase sentence time. Other example, if the police detects that criminals vandalize or break in cars in parking lots, a campaign threatening police apprehension for this type of crime would be effective.
 
@@ -718,7 +707,7 @@ According to the results of our research, campaign focused more on the risk of a
  * Increase the budget for police force training, this would result in a more efficient and effective police force, therefore increasing the probabilities of arrest and conviction
  * Design policy focused on more stringent arrest protocols.
 
-On the other hand, our research shows that probability of being sent to prison and time served in prison do not seem to predict a lower crime rate. Possible explanations are that prisons do not really rehabilitate, inmates learn new and better ways to commit crimes, are locked-up with bad influencers, and as such, more prison time could induce recidivism. Therefore we do not suggest the political campaign to explore policies associated with increasing sentence time.
+On the other hand, our research shows that probability of being sent to prison and time served in prison does not seem to be associated with a lower crime rate. Possible explanations are that prisons do not really rehabilitate, inmates learn new and better ways to commit crimes, are locked-up with bad influencers, and as such, more prison time could induce recidivism. Therefore we do not suggest the political campaign to explore policies associated with increasing sentence time.
 
 Increasing the police per capita ratio or police force size is not associated to a decrease crime rate. This is not very intuitive and we think it could be due to the following reasons:
 
@@ -740,4 +729,3 @@ It is evident in the third model the association of percent of minorities with c
 
 ```{r appendix, code = readLines('appendix.R')}
 ```
-

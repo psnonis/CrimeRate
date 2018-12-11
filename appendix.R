@@ -106,23 +106,25 @@ bKable <- function(b)
 {
     colnames(b) <- c("Regressor",
                      "$\\beta_1$","$\\beta_2$","$\\beta_3$","$\\beta_4$","$\\beta_5$","$\\beta_6$","$\\beta_7$",
-                     "$\\gamma_1$", "Direction of Bias", "Bias wrt Zero")
-    kable(b, escape = FALSE)
+                     "$\\gamma_1$", "Bias Direction", "Bias wrt Zero")
+    b       %>%
+    kable() %>%
+    kable_styling()
 }
 
 bTable1 <- function()
 {
     bKable(data.frame(
         c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
-        c("negative","-","-","-","-","-"),
-        c("-","negative","-","-","-","-"),
-        c("-","-","positive","-","-","-"),
-        c("-","-","-","positive","-","-"),
-        c("-","-","-","-","positive","-"),
-        c("-","-","-","-","-","positive"),
-        c("positive","positive","positive","positive","positive", "positive"),
-        c("negative","negative","negative","negative","close to zero","positive"),
-        c("negative","negative","negative","negative","close to zero","positive"),
+        c("$-$","","","","",""),
+        c("","$-$","","","",""),
+        c("","","$+$","","",""),
+        c("","","","$+$","",""),
+        c("","","","","$+$",""),
+        c("","","","","","$+$"),
+        c("$+$","$+$","$+$","$+$","$+$", "$+$"),
+        c("$-$","$-$","$-$","$-$","close to zero","$+$"),
+        c("$-$","$-$","$-$","$-$","close to zero","$+$"),
         c("away from zero","away from zero", "towards zero", "towards zero","close to zero bias","away from zero")))
 
 }
@@ -131,15 +133,15 @@ bTable2 <- function()
 {
     bKable(data.frame(
         c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
-        c("negative","-","-","-","-","-"),
-        c("-","negative","-","-","-","-"),
-        c("-","-","positive","-","-","-"),
-        c("-","-","-","positive","-","-"),
-        c("-","-","-","-","positive","-"),
-        c("-","-","-","-","-","positive"),
-        c("negative","negative","negative","negative","negative", "negative"),
-        c("negative","negative","negative","negative","close to zero","close to zero"),
-        c("positive","positive","positive","positive","close to zero","close to zero"),
+        c("$-$","","","","",""),
+        c("","$-$","","","",""),
+        c("","","$+$","","",""),
+        c("","","","$+$","",""),
+        c("","","","","$+$",""),
+        c("","","","","","$+$"),
+        c("$-$","$-$","$-$","$-$","$-$", "$-$"),
+        c("$-$","$-$","$-$","$-$","close to zero","close to zero"),
+        c("$+$","$+$","$+$","$+$","close to zero","close to zero"),
         c("towards zero","towards zero", "away from zero", "away from zero","close to zero bias","close to zero bias")))
 }
 
@@ -147,15 +149,15 @@ bTable3 <- function()
 {
     bKable(data.frame(
         c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
-        c("negative","-","-","-","-","-"),
-        c("-","negative","-","-","-","-"),
-        c("-","-","positive","-","-","-"),
-        c("-","-","-","positive","-","-"),
-        c("-","-","-","-","positive","-"),
-        c("-","-","-","-","-","positive"),
-        c("positive","positive","positive","positive","positive", "positive"),
-        c("positive","positive","positive","positive","close to zero","close to zero"),
-        c("positive","positive","positive","positive","close to zero","close to zero"),
+        c("$-$","","","","",""),
+        c("","$-$","","","",""),
+        c("","","$+$","","",""),
+        c("","","","$+$","",""),
+        c("","","","","$+$",""),
+        c("","","","","","$+$"),
+        c("$+$","$+$","$+$","$+$","$+$", "$+$"),
+        c("$+$","$+$","$+$","$+$","close to zero","close to zero"),
+        c("$+$","$+$","$+$","$+$","close to zero","close to zero"),
         c("towards zero","towards zero", "away from zero", "away from zero","close to zero bias","close to zero bias")))
 }
 
@@ -163,15 +165,15 @@ bTable4 <- function()
 {
     bKable(data.frame(
         c("prbarr","prbconv","prbpris","avgsen.log","polpc.log", "mix.log"),
-        c("negative","-","-","-","-","-"),
-        c("-","negative","-","-","-","-"),
-        c("-","-","positive","-","-","-"),
-        c("-","-","-","positive","-","-"),
-        c("-","-","-","-","positive","-"),
-        c("-","-","-","-","-","positive"),
-        c("positive","positive","positive","positive","positive", "positive"),
-        c("positive","positive","positive","positive","close to zero","positive"),
-        c("positive","positive","positive","positive","close to zero","positive"),
+        c("$-$","","","","",""),
+        c("","$-$","","","",""),
+        c("","","$+$","","",""),
+        c("","","","$+$","",""),
+        c("","","","","$+$",""),
+        c("","","","","","$+$"),
+        c("$+$","$+$","$+$","$+$","$+$", "$+$"),
+        c("$+$","$+$","$+$","$+$","close to zero","$+$"),
+        c("$+$","$+$","$+$","$+$","close to zero","$+$"),
         c("towards zero","towards zero", "away from zero", "away from zero","close to zero bias","away from zero")))
 }
 
