@@ -331,8 +331,6 @@ While holding all other covariates and unobserved factors fixed:
 - $\beta_3$ : `prbpris`    is `r coef(m1)[4]`, a 1% increase in probability of prison,     crime rate will go up   by approximately `r coef(m1)[4]/100`%. Even though the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant, its sign is still counter-intuitive and not in line with our hypothesis.
 - $\beta_4$ : `avgsen.log` is `r coef(m1)[5]`, a 1% increase in the average sentence,      crime rate will go up   by approximately `r coef(m1)[5]/100`%. Even though the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant, its sign is still counter-intuitive and not in line with our hypothesis.
 
-It is worth noting that the coefficients for `prbarr` and `prbconv` amplify the effect of increasing `prbarr` or `prbconv`. This is not true for the coefficients for `prbpris` and `avgsen.log`.
-
 Another point worth noting is that, while the sign of coefficients of `prbarr` and `prbconv` are negative,the positive coefficient signs of `prbpris` and `avgsen.log` are contradictory to our hypothesis. An increase in those variables is associated with an increase in crime rates, the opposite of the effect we expected.
 
 On the statistical significance, we can only reject the null hypothesis that the true coefficients for Probability of Arrest and Probability of Conviction in the population model are zero. There is not enough evidence however, to support that the coefficients of Probability of Prison and Log(Average Sentence) are not zero.
@@ -363,11 +361,11 @@ The explained variable remains identical to the base model.
 
 <b>Explanatory Variables</b>
 
-To improve the the model accuracy, we decided to include two additional explanatory variables to our base model to build our extended one. Below we explain the rationale for our decision.
+To improve the model accuracy, we decided to include two additional explanatory variables to our base model to build our extended one. Below we explain the rationale for our decision.
 
-- Police per Capita (`polpc`): We chose this covariate based on the assumption that a higher number of cops in charge is associated with an unsafe environment for individuals to commit crimes, which in turn builds a safer, low-crime community. We didn’t want to leave this variable among unobserved factors, since, intuitively, we think police per capita is correlated with probability of arrest We are expecting to observe a negative coefficient for this variable.
+- Police per Capita (`polpc`): We chose this covariate based on the assumption that a higher number of cops in charge is associated with an unsafe environment for individuals to commit crimes, which in turn builds a safer, low-crime community. We didn’t want to leave this variable among unobserved factors, since, intuitively, we think police per capita is correlated with probability of arrest. We are expecting to observe a negative coefficient for this variable.
 
-- Offense Mix (`mix`): A high offense mix value means a higher ratio of face-to-face offenses to other offenses. Since a face-to-face offense (e.g. assault, armed robbery, rape) often has at least a witness (except for homicide), we assume that probability of arrest is higher in such cases compared to other types of offenses. Also, face-to-face offenses are usually more serious that other types and could lead to higher likelihood of conviction and imprisonment as well as higher avg. sentence. Based on these assumptions, we are adding `mix` to the extended model, since it includes `prbarr`. 
+- Offense Mix (`mix`): A high offense mix value means a higher ratio of face-to-face offenses to other offenses. Since a face-to-face offense (e.g. assault, armed robbery, rape) often has at least a witness (except for homicide), we assume that probability of arrest is higher in such cases compared to other types of offenses. Also, face-to-face offenses are usually more serious that other types and could lead to higher likelihood of conviction and imprisonment as well as higher avg. sentence. Based on these assumptions, we are adding `mix` to the extended model. 
 
 Having seen positive skewness in the distributions of `polpc` and `mix` in our in initial EDA and since none of these variables could take a negative value, we are considering log transformation of these variables. This is also appropriate since it mitigates the influence of positive outliers that we have identified in our data. As seen in the histograms below, since the log transformation results in distributions closer to normal for both `polpc` and `mix`, we decided to use log transformations of these variables in our model. 
 
@@ -499,7 +497,7 @@ Even though an increase in avg. prison sentence is associated with lower crime r
 
 As in the base model, the probability of prison has a positive coefficient in our base model, meaning a higher prison to conviction ratio is associated with higher crime rate. Also, in model 2, we found that increase in police per capita is associated with higher crime rate. We believe that the relationships we observed might be due to the fact that the prison to conviction ratio and police per capita are already high in areas where crime rate is high. For a more effective assessment of this situation, we would have to have data to see the trends in crime rate before and after changes in prison/conviction ratio and police per capita where they are implemented. 
 
-Even though the coefficient for offense mix variable is not significant, we believe that the addition of this variable has improved our model. Specifically, the standard error for `prbarr` coefficient has decreased and it p-value is much smaller than what we observed in the base model. Also, the sign for coefficient of `avgsen.log` has turned from positive to negative in the extended model, which is in line with our research hypothesis. 
+Even though the coefficient for offense mix variable is not significant, we believe that the addition of this variable has improved our model. Specifically, the standard error for `prbarr` coefficient has decreased and its p-value is much smaller than what we observed in the base model. Also, the sign for coefficient of `avgsen.log` has turned from positive to negative in the extended model, which is in line with our research hypothesis. 
 
 # Kitchen-sink Model
 
@@ -620,7 +618,7 @@ We notice that only prbarr, prbconv, polpc.log, density and pctmin80 are statist
 - $\beta_1$  : `prbarr`        is `r coef(m3)[ 2]`, every 1% increase in probability of arrest     is associated with a `r coef(m3)[ 2]`% decrease in crime rate
 - $\beta_2$  : `prbconv`       is `r coef(m3)[ 3]`, every 1% increase in probability of conviction is associated with a `r coef(m3)[ 3]`% decrease in crime rate
 - $\beta_5$  : `polpc.log`     is `r coef(m3)[ 6]`, every 1% increase in police per capita         is associated with a `r coef(m3)[ 6]`% increase in crime rate
-- $\beta_7$  : `density`       is `r coef(m3)[ 8]`, every 100 additional people per square mile is associated with a `r coef(m3)[ 8]`% increase in crime rate
+- $\beta_7$  : `density`       is `r coef(m3)[ 8]`, every 100 additional people per square mile    is associated with a `r coef(m3)[ 8]`% increase in crime rate
 - $\beta_9$  : `pctmin80`      is `r coef(m3)[10]`, every 1% increase in percent minority          is associated with a `r coef(m3)[10]`% increase in crime rate
 
 <b>Goodness of Fit</b>
@@ -629,7 +627,7 @@ We notice that only prbarr, prbconv, polpc.log, density and pctmin80 are statist
 * The adjusted R-squared value is <b>`r summary(m3)$adj.r.squared`</b> , however, we do not know if another specification model with less variables than the third model could have a higher adjusted R2.
 * Akaike Information Criterion value is <b>`r AIC(m3)`</b> which is lower than the AIC value for base model `r AIC(m1)`, and the AIC value for our second model `r AIC(m2)`. 
 
-The values r-squared and r-squared adjusted are very high, this specification is probably an overfit model, too complicated for our dataset and with too many regressors for our number of observations.
+The values r-squared and r-squared adjusted are very high, this specification is probably an overfit model, too complicated for our dataset.
 
 ## Research Interpretation
 
@@ -642,42 +640,39 @@ The main goal of running this third specification was to assess the robustness o
 # Regression Table
 
 ```{r regression, results = "asis"}
-m1.se = sqrt(diag(vcovHC(m1)))
-m2.se = sqrt(diag(vcovHC(m2)))
-m3.se = sqrt(diag(vcovHC(m3)))
+m1.se <- sqrt(diag(vcovHC(m1)))
+m2.se <- sqrt(diag(vcovHC(m2)))
+m3.se <- sqrt(diag(vcovHC(m3)))
 
-stargazer(m1, m2, m3, type = "html", omit.stat = "f", title = "Linear Models of Crime Rate",
-          column.labels = c("M1", "M2", "M3"), dep.var.labels = c("Crime Rate per Capita"),
+m1.fs <- round(waldtest(m1)$F[2], 2)
+m2.fs <- round(waldtest(m2)$F[2], 2)
+m3.fs <- round(waldtest(m3)$F[2], 2)
+
+m1.fr <- round(waldtest(m1, vcov = vcovHC(m1))$F[2], 2)
+m2.fr <- round(waldtest(m2, vcov = vcovHC(m2))$F[2], 2)
+m3.fr <- round(waldtest(m3, vcov = vcovHC(m3))$F[2], 2)
+
+stargazer(m1, m2, m3, type = "html", title = "Linear Models of Crime Rate",
+          column.labels = c("M1", "M2", "M3"), dep.var.caption = "", dep.var.labels = c("Crime Rate per Capita"),
           se = list(m1.se, m2.se, m3.se), star.cutoffs = c(0.05, 0.01, 0.001), digits = 2,
-          single.row = T, intercept.bottom = F)
+          single.row = T, intercept.bottom = F,
+          add.lines = list(c("F Statistic - Standard", m1.fs, m2.fs, m3.fs),
+                           c("F Statistic - HC Robust", m1.fr, m2.fr, m3.fr)))
 ```
-
-
 
 ## Practical Significance of Coefficients
 
 Here we explain the practical significance of coefficients with in the extended model and others in the kitchen-sink model that are not in extended model, with a focus on variables that are statistically significant and relevant to our research question. We will explain in our Conclusion that we believe the extended model is our preferred model, compared with the other two.
 
-- `prbarr`: The coefficient of this variable in our extended model is -2.4, meaning a unit increase in probability of arrest is associated with 2.45% decline in crime rate. This coefficient is practically significant. For example, if we assume a probability of prison of 30% (`prbarr` mean) is calculated in high-crime county with 100,000 crimes, the number of arrests should be 30,0000. Then a nunit increase in `prbarr` (1%) means that only 1,000 additional arrests is associated with 2.4% decline in crime, which is a significant amount.
-- `prbconv`: The coefficient of this variable in our extended model is -0.7, meaning meaning a unit increase in probability of arrest is associated with 0.7% decline in crime rate. We believe this is practically significant. For example, if we assume a probability of conviction to crime of 55%  (`prbarr`) is calculated by calculated in a county with 10,000 convictions, the number of prison sentences should be 5,500. This means a an increase of only 55 in number of prison sentences is associated with 0.7% in decline in crime. As a potential policy measure, this sounds to be easily achievable.
+- `prbarr`: The coefficient of this variable in our extended model is -2.4, meaning an increase (i.e. 1%) in probability of arrest  is associated with 2.45% decline in crime rate. This coefficient is practically significant. For example, if we assume a probability of arrest of 30% (`prbarr` mean) is calculated in high-crime county with 100,000 crimes, the number of arrests should be 30,0000. Then a unit increase in `prbarr` (1%) means that only 1,000 additional arrests is associated with 2.4% decline in crime, which is a significant amount.
+- `prbconv`: The coefficient of this variable in our extended model is -0.7, meaning meaning a unit increase in probability of conviction is associated with 0.7% decline in crime rate. We believe this is practically significant. For example, if we assume a probability of conviction to arrests of 55%  (`prbconv`) is calculated  in a county with 10,000 arrests, the number of convictions should be 5,500. This means  an increase of only 55 in number of convictions is associated with 0.7% in decline in crime. As a potential policy measure, this sounds to be easily achievable.
 - `polpc.log`: Even though the coefficient of this variable is statistically significant, it does not make sense interpret the practical significance of the coefficient. The positive sign of the coefficient is counterintuitive, which might be due to reasons explained above for the extended model coefficients.
-- `density`: The coefficient of this variable in our extended model is 0.08, meaning a unit increase in probability of arrest is associated with 0.8% increase in crime rate. It does not make sense interpret the practical significance of the coefficient, since this is no
- 
-
-The practical significance this coefficient is relative and depends on the size of numerator and denominator in the arrest to crime ratio. For instance if a probability of arrest
-
-- $\beta_0$ : `intercept`   is `r coef(m2)[1]`, which can not be interpreted in a meaningful way without considering the other coefficients. The t-stat and p-value on the intercept indicate that it is not statistically significant.
-- $\beta_1$ : `prbarr`     is `r coef(m2)[2]`, meaning a unit increase in probability of arrest is associated with 2.45% decline in crime rate. The t-stat and p-value on the coefficient indicate that it is statistically significant. The sign of the coefficient and its statistical significance are in line with our research hypothesis. 
-- $\beta_2$ : `prbconv`    is `r coef(m2)[3]`, meaning a unit increase in probability of conviction is associated with 0.7% decline in crime rate. The t-stat and p-value on the coefficient indicate that it is statistically significant. The sign of the coefficient and its statistical significance are in line with our research hypothesis. 
-- $\beta_3$ : `prbpris`    is `r coef(m2)[4]`, meaning a unit increase in probability of prison is associated with a 0.28% increase in crime rate. Although, the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant, its sign is still counter-intuitive and not in line with our hypothesis.
-- $\beta_4$ : `avgsen.log` is `r coef(m2)[5]`, meaning 1% increase in avg. prison sentence is associated with 0.05% decline in crime rate. The sign of the coefficient is in line with our hypothesis; however, the t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant.
-- $\beta_5$ : `polpc.log`  is `r coef(m2)[6]`, meaning 1% increase in police per capita is associated with a 0.62% increase in crime rate. The t-stat and p-value on the coefficient indicate that the coefficient is statistically significant; however, its sign is counter-intuitive (because you one couldn't imagine crime rate going up as a result of having more police on the streets) and not in line with our hypothesis. This might be due to the fact that wherever there is high crime rate, increasing the size of police force has been considered and implemented. Also, it might be because in places where there are more police, a higher number of crimes are reported (i.e. fewer unreported crimes). 
-- $\beta_6$ : `mix.log`  is `r coef(m2)[7]`, meaning 1% increase in offense mix ratio is associated with a 0.62% increase in crime rate. The t-stat and p-value on the coefficient indicate that the coefficient is not statistically significant.
+- `density`: The coefficient of this variable in the 3rd model is 0.08, meaning a unit increase in police per capita is associated with 0.8% increase in crime rate. It does not make sense to interpret the “practical” significance of this coefficient, since density is not a controllable factor. Also, measuring the “effect size” for this variable is not straightforward, because `density` values depend on the numerator and denominator of the population to area ratio. For example in 2 counties with the the same area, a 1% change in density, when population is high, means a significant change in the actual population size, but if the population is low, then 1% change in density translates into a smaller change in the actual population size.  
+- `pctmin80`: The coefficient of this variable in the 3rd model is 0.01, meaning a unit increase in percent of minority is associated with 0.1% increase in crime rate. It does not make sense to interpret the practical significance of this coefficient, since percent minority is not a controllable factor. Similar to our explanation above for `density`, interpretation of the “effect size” of percent minority variable is not straightforward and it should be assessed in the context of a country's actual population and the size of minority population.
 
 # Omitted Variable Analysis
 
 Besides the variables presented to us in the crime dataset, we understand there are other variables that might impact both our explanatory variables and output variable. In this section we will discuss the effects those variables might have on our model coefficients, theorizing whether their inclusion in the model would drive our coefficients away or closer to zero.
-
 
 ## Illegal Guns per Capita
 
@@ -713,46 +708,49 @@ bTable4()
 
 # Conclusion
 
+6.0 Conclusion.
+
 We started this study with the following research question: <b>Could increasing the certainty and the severity of punishment reduce the crime rate?</b>
 
-<mark>The main conclusion we can take away from our analysis is that certainty of punishment is associated, however, there is not enough evidence to claim whether severity of punishment is or is not.</mark>
+<mark>The main conclusion we can make from our analysis is that certainty of punishment is associated with lower crime rate. However, the data and our model do not produce enough evidence to claim whether severity of punishment is associated with low crime rate or not.</mark>
 
-The goal of this study is to provide actionable insights to the political campaign towards reducing crime rate. Our analysis is not a causal model, because we can’t measure (or even identify) all variables that might cause crime rate, and these omitted variables might affect the results of our conclusions. Furthermore, we do not have data from subsequent years after implementing a crime policy change to causally confirm the effect.
+The goal of this study is to provide actionable insights to the political campaign towards reducing crime rate. However, our analysis can not establish causal effect, since to determine causality an experimental study is required. For example, we could suggest policy change to be implemented in some counties to later measure and analyse its impact in comparison with other countries without such policy change (i.e. control group). If experimental study is not possible, an alternative would be a dataset that includes longitudinal panel data, to enable us to create test vs control groups and analyse the impact of policy changes that were adopted in the past. 
 
-Having said that, the probability of being arrested and convicted are associated with a lower crime rate. Therefore, we advice the political campaign to design policies that increase these probabilities.
-The political campaign should design policies focused on increasing the certainty of punishment (do criminals expect to get caught and convicted). We recommend a strategy of publicity campaigns focused on increasing the “perception” of getting caught and convicted.
+Having said that, the probability of being arrested and convicted are associated with a lower crime rate. Therefore, we advise the political campaign to design policies that increase these probabilities. The political campaign should design policies aimed at increasing the certainty of punishment to ensure higher success rate in arresting criminals and higher probability of conviction. We also recommend a strategy of publicity campaigns focused on increasing the “perception” of getting caught and convicted.
 
-For example, investing in cameras/surveillance equipment that will be placed in hot spots in the counties, will likely lead to more arrests (offenders identification) and convictions (the evidence will support the prosecutors cases). And therefore, the ratios used as probability proxies will increase. However, potential offenders do not check the proportion arrests to offenses when they go through the cost/benefit analysis of a criminal activity, they use their perception of being punished and probably rely on what has happened to relatives, acquaintances, etc that have conducted similar criminal activities. That is why we advise to develop publicity campaigns alongside each initiative. The campaigns will assure that a bigger segment of the population hears about the initiative and should have the effect to increase the perception of certainty of being punished, persuading the potential criminals to change their behaviour.
-
-According to the results of our research, campaign focused more on the risk of apprehension and conviction, results of past police operations/crackdowns, etc, would have a better crime deterrent effect than informing of law changes that increase sentence time. Other example, if the police detects that criminals vandalize or break in cars in parking lots, a campaign threatening police apprehension for this type of crime would be effective.
+For example, investing in cameras/surveillance equipment that will be placed in hotspots in the counties, will likely lead to more arrests (offenders identification) and convictions (the evidence will support the prosecutors’ cases). And therefore, the ratios used as probability proxies will increase. Although potential offenders do not check the proportion of arrests to offenses when they go through the risk/benefit analysis of a criminal activity, their perception of being punished would be impacted by tangible effects of policy change (e.g. more CCTV cameras), as well as by news about the punishment of other individuals who committed crime. That is why we advise to develop publicity campaigns alongside each initiative. Law enforcement organizations should also make sure that that the majority of a county’s residents hear about the initiative, in order to increase the perception of punishment certainty among potential criminals.
 
 <b>Other actionable insights could include</b>
 <br>
 
- * Increase the budget for police force training, this would result in a more efficient and effective police force, therefore increasing the probabilities of arrest and conviction
- * Design policy focused on more stringent arrest protocols.
+ * Increase the budget for police force training, which would result in a more effective law enforcement
+ * Design policy focused on more stringent arrest protocols
+ * Increase the responsiveness and efficiency of emergency response (e.g. timely response to 911 calls)
+ * Invest in new crime detection/surveillance technologies, such as drones
+ * Improve investigation procedures to increase effectiveness of evidence collection to support criminal charges
+ * Reform criminal justice law to ensure higher conviction rate
 
-On the other hand, our research shows that probability of being sent to prison and time served in prison does not seem to be associated with a lower crime rate. Possible explanations are that prisons do not really rehabilitate, inmates learn new and better ways to commit crimes, are locked-up with bad influencers, and as such, more prison time could induce recidivism. Therefore we do not suggest the political campaign to explore policies associated with increasing sentence time.
+Our research shows that probability of imprisonment and time served in prison do not seem to be associated with a lower crime rate. One possible explanation is that probability of imprisonment and sentence time are already high in high-crime counties as a result of previous policy decisions (made before 1987). Also, it might be because prisons do not really rehabilitate inmates, on the contrary exposure to other criminals, who might have committed serious crime, could lead to increase in the tendency of committing repeat crimes among “first-timers”. We do not suggest the political campaign to consider policies associated with increasing sentence time before further evaluation. Such evaluation should first look into the reason for the unusually low average prison sentence time in our data, with a maximum of 20 days. 
 
-Increasing the police per capita ratio or police force size is not associated to a decrease crime rate. This is not very intuitive and we think it could be due to the following reasons:
+Increasing the police per capita ratio or police force size is not associated to a decrease in crime rate. This is not very intuitive and we think it could be due to the following reasons:
 
- * The relationship might be inverse: counties with high crime rates tend to increase their police force, however, that increase is yet to achieve a result in crime reduction.
- * Reporting of crimes: in counties with more police officers, people might feel more inclined to report the crimes, and the higher number of cops might also mean closer police stations for the population to report those crimes. That doesn’t necessarily mean that counties with less police have less crimes. It could instead mean that there is a great number of crimes that don’t get reported.
+ * The relationship might be inverse: Counties with high crime rates tend to increase their police force, however;  the subsequent decline in crime is not captured in our cross-sectional data
+ * Reporting crimes: It is possible that in counties with more police,a relatively higher number of crimes are reported, whereas in counties with smaller police per capita, there might be a higher percentage of unreported crimes that were not detected 
 
-Having said that, increasing the number of police "in the streets" or in hot spots in the cities, would increase the perception of getting caught and would probably work as a deterrent effect on crime rate. 
+Having said that, and in line with our argument regarding the effect of certainty of punishment, increasing the number of police "on the streets" could increase the perception of getting caught and would probably have a deterrent effect on crime rate. 
 
-It is evident in the third model the association of percent of minorities with crime rate. The campaign should design crime prevention programs aimed at this demographic group (especially in counties with higher density). 
+Our third model result shows and association between higher percent of minorities with higher crime rate. We suggest the campaign to first evaluate the situation further in order to understand why there is such an association (e.g. low education, high unemployment, discrimination) to be able to formulate appropriate policy to address the root causes. 
+
+Finally, we also found out that higher density is associated with higher crime rate. Therefore, we believe that any action plan to control crime rate in North Carolina should prioritize the high-density counties. We would also suggest further assessment to understand what type of offenses are more common in high-density areas and develop policy measures accordingly. 
 
 <b>We suggest further research to include</b>
 <br>
 
-* The data set does not discriminate among crime types. We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft). This could lead to more interesting findings on the specific effects of the predictor variables per type of crime.
-* The data set only includes data for the year 1987. We think that this sample could be biased. We would need to expand this research with more years.
-* Adding data on specific percent of minorities sub-groups, such as school dropouts, teenager parenting, substance abuse, could provide more actionable insights to design specific outreach programs.
+* Data from all counties: As explained before, we have some concerns with regard to sampling methodology and missing data. Any future analysis should use a dataset would not cause such concerns.
+* More granular data: The data set does not discriminate among crime types. We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft). This could lead to more interesting findings on the specific effects of the predictor variables per type of crime
+* Extend time period: The current dataset only includes data from 1987. For a better and more reliable analysis, we would have to have access to broader time period that covers a few years (i.e. panel data)
+* Omitted variables: We have identified some potentially omitted variables and suggest collecting data to capture those variables, which will enable us to build a more reliable model
 
-To add (Payman):
-Casual relationship requires experiment and our model is not aimed for identifying causality
-Normal sampling possible violations
 
 # Appendix
 
