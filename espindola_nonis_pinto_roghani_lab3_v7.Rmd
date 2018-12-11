@@ -49,7 +49,7 @@ opts_chunk$set(fig.width = 9, message = FALSE, warning = FALSE)
 
 # Introduction
 
-The primary motivation of this report is to provide associative estimates for determinants of crime in the state of North Carolina. The key objective of our study is to shape the public policy platforms of the political campaign that has hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
+The primary motivation of this report is to provide associative estimates for determinants of crime in the state of North Carolina. The key objective of our study is to shape the public policy platforms of the political campaign that hired our services, in the upcoming election cycle. We strive to provide actionable policy recommendations through motivated data analysis of the research question(s).
 
 ## Research Question
 
@@ -706,7 +706,7 @@ We started this study with the following research question: <b>Could increasing 
 
 <mark>The main conclusion we can make from our analysis is that certainty of punishment is associated with lower crime rate. However, the data and our model do not produce enough evidence to claim whether severity of punishment is associated with low crime rate or not.</mark>
 
-The goal of this study is to provide actionable insights to the political campaign towards reducing crime rate. However, our analysis can not establish causal effect, since to determine causality an experimental study is required. For example, we could suggest policy change to be implemented in some counties to later measure and analyse its impact in comparison with other countries without such policy change (i.e. control group). If experimental study is not possible, an alternative would be a dataset that includes longitudinal panel data, to enable us to create test vs control groups and analyse the impact of policy changes that were adopted in the past. 
+The goal of this study is to provide actionable insights to the political campaign towards reducing crime rate. However, our analysis can not establish causal effect, since to determine causality an experimental study is required. For example, we could suggest policy change to be implemented in some counties to later measure and analyse its impact in comparison with other counties without such policy change (i.e. control group). If experimental study is not possible, an alternative would be a dataset that includes longitudinal panel data, to enable us to create test vs control groups and analyse the impact of policy changes that were adopted in the past. 
 
 Having said that, the probability of being arrested and convicted are associated with a lower crime rate. Therefore, we advise the political campaign to design policies that increase these probabilities. The political campaign should design policies aimed at increasing the certainty of punishment to ensure higher success rate in arresting criminals and higher probability of conviction. We also recommend a strategy of publicity campaigns focused on increasing the “perception” of getting caught and convicted.
 
@@ -742,7 +742,6 @@ Finally, we also found out that higher density is associated with higher crime r
 * More granular data: The data set does not discriminate among crime types. We suggest that further studies should be done discriminating violent crime (murder, rape, robbery etc.) from minor offenses such as property crimes (burglary, larceny, and auto theft). This could lead to more interesting findings on the specific effects of the predictor variables per type of crime
 * Extend time period: The current dataset only includes data from 1987. For a better and more reliable analysis, we would have to have access to broader time period that covers a few years (i.e. panel data)
 * Omitted variables: We have identified some potentially omitted variables and suggest collecting data to capture those variables, which will enable us to build a more reliable model
-
 
 # Appendix
 

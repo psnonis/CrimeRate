@@ -1,18 +1,11 @@
 # appendix.R
+# the following code is used to style our charts and tables
 
 pModel <- function(m, title)
 {
     autoplot(m, smooth.colour = "#dd4814", smooth.size = 1, alpha = 0.8, size = 2) +
     theme(title = element_text(size = 10, face = 'bold', family = 'sans'),
           plot.background = element_rect(fill = "#f8f2e4"))
-}
-
-pDiagnostics_ <- function(m, which)
-{
-    par(mfrow = c(1, 1))
-    autoplot(m, which = which, ncol = 1, smooth.colour = "#dd4814", smooth.size = 1, alpha = 0.8, size = 2) +
-        theme(title = element_text(size = 10, face = 'bold', family = 'sans'),
-              plot.background = element_rect(fill = "#f8f2e4"))
 }
 
 pDiagnostics <- function(m, which)
